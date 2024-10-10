@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",                        // Especifica el estándar de JavaScript para el código de salida
+    "module": "ESNext",                        // Especifica el sistema de módulos a utilizar
+    "strict": true,                            // Activa todas las comprobaciones de tipo estricto
+    "esModuleInterop": true,                   // Habilita la interoperabilidad entre CommonJS y ES Modules
+    "skipLibCheck": true,                      // Omite la verificación de archivos de declaración (.d.ts)
+    "forceConsistentCasingInFileNames": true, // Fuerza el uso consistente de mayúsculas y minúsculas en los nombres de archivos
+    "outDir": "./dist",                        // Directorio de salida para archivos compilados
+    "rootDir": "./src",                        // Directorio raíz de entrada
+    "moduleResolution": "node",                // Resuelve módulos utilizando el algoritmo de resolución de Node
+    "resolveJsonModule": true,                 // Permite importar archivos JSON
+    "baseUrl": "./",                           // Base para la resolución de módulos
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"] // Resolución de rutas para tipos personalizados
+    }
+  },
+  "include": [
+    "src/**/*"                                 // Incluir todos los archivos dentro del directorio src
+  ],
+  "exclude": [
+    "node_modules",                            // Excluir el directorio node_modules
+    "**/*.spec.ts"                             // Excluir archivos de pruebas
+  ]
+}

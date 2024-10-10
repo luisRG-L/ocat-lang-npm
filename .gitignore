@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Build directory
+dist/
+
+# Test directory
+test/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage directory
+coverage
+
+# VSCode
+.vscode
+
+# JetBrains
+.idea
+
+# Mac
+.DS_Store
+
+# Private files
+.private
