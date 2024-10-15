@@ -63,7 +63,9 @@ export const tokenize = (input: string): Token[] => {
         else if(word === "=") {
             token.type = TokenType.Assign;
         }
-        else {
+        else if (word === "import") {
+            token.type = TokenType.IERQ;
+        } else {
             token.type = TokenType.Identifier;
         }
 

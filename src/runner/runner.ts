@@ -6,17 +6,21 @@ import express from 'express';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { init } from '../lang.js';
+import { exec } from 'child_process';
 
 const memory: Memory = new Memory();
 const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../json/config.json');
 const data = fs.readFileSync(configPath, 'utf8');
-const config = JSON.parse(data) as { port: number; on404: string };
+const config = JSON.parse(data);
 
-let usePort: boolean = false;
+let usePort: boolean;
 let index: number = 0;
 const routes: { name: string; result: string }[] = [];
 
 const app = express();
+
+let styles = '';
 
 export const run = (nodes: Node[]): void => {
     nodes.forEach((node) => {
@@ -45,10 +49,27 @@ export const run = (nodes: Node[]): void => {
             case NodeType.SHOW:
                 usePort = true;
                 const route = '/'+node.params.route||`/404/${++index}`;
+                const processedContent = processHTML(node.params.content);
                 app.get(route, (req, res) => {
-                    res.send(node.params.content);
+                    res.send(processedContent);
                 });
-                routes.push({ name: route, result: node.params.content?node.params.content:'' });
+                routes.push({ name: route, result: `<style>${styles}</style>${processedContent}`});
+                break;
+
+            case NodeType.STYLE:
+                styles = node.params.content || '* { box-sizing: border-box; }';
+                break;
+
+            case NodeType.IMPORT:
+                init(false, false, './'+node.params.name || './lib/main.ocat');
+                break;
+
+            case NodeType.CDECLARE:
+                memory.declareComponent(node.params.name, node.params.content);
+                break;
+        
+            case NodeType.EXEC:
+                exec(node.params.content || `echo ${config.ENCFE}`);
                 break;
         }
     });
@@ -96,7 +117,16 @@ const commanditeCond = (node: Condition): boolean | undefined => {
 
     return value;
 };
-
 app.listen(config.port, () => {
-    console.log(`Project running on port http://localhost:${config.port}`);
-})
+    console.log(config.port === 0o0 ? '' : `Project running on port http://localhost:${config.port}`);
+});
+
+const processHTML = (html?: string) => {
+    const componentRegex = /<\{(\w+)\}>/g;
+
+    return (html || ``)
+        .replace(componentRegex, (_match, componentName) => {
+            return memory.getComponent(componentName) || `<p>Component not founded</p>`;
+        })
+    ;
+}

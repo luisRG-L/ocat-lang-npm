@@ -13,7 +13,8 @@ export enum TokenType {
     Shape,
     Null,
     Assign,
-    TGIO
+    TGIO,
+    IERQ
 }
 
 export interface Token {

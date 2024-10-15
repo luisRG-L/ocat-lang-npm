@@ -20,6 +20,7 @@ export const parse = (tokensK: Token[]): Node[] => {
             base: token
         };
 
+        // Manejo de la instrucción 'print'
         if (token.type === TokenType.IO && token.value === 'print') {
             nextToken();
             token = getToken();
@@ -31,97 +32,91 @@ export const parse = (tokensK: Token[]): Node[] => {
             nextToken();
             token = getToken();
             node.type = NodeType.OUTPUT;
+
             if (token.value.startsWith('"') || token.value.startsWith("'")) {
-                node.params = {
-                    content: collectString()
-                }
-            } else if(token.type === TokenType.Identifier) {
+                node.params = { content: collectString() };
+            } else if (token.type === TokenType.Identifier) {
                 node.params = {
                     content: "\\GET",
                     name: getToken().value
-                }
+                };
             }
 
             nextToken();
             token = getToken();
-
-            if (token.type !== TokenType.Shape) {
-                error(`Expected ')' after value, but got: ${token.value} (Type: ${token.type} at index ${currentIndex})`);
-            }
 
         } else if (token.type === TokenType.Datatype) {
-            const varType = getToken().value;
+            // Manejo de la declaración de variable
+            const varType = token.value;
             nextToken();
             token = getToken();
-            const varName = getToken().value;
+            const varName = token.value; // Obtener el nombre de la variable
             nextToken();
             token = getToken();
 
             if (token.type !== TokenType.Assign) {
                 error("Undefined assigner");
-            } 
+            }
 
             nextToken();
-            let val;;
-            if((token.value.startsWith('"') || token.value.startsWith("'"))) {
+            let val: string;
+            if (token.value.startsWith('"') || token.value.startsWith("'")) {
                 val = collectString();
-            }else {
+            } else {
                 val = getToken().value;
             }
-            const value = val;
 
-
-            const isNULL: boolean = value === "null";
-            switch(varType) {
+            const isNULL: boolean = val === "null";
+            switch (varType) {
                 case "int":
-                    if(isNaN(Number(value)) && !isNULL) {
-                        error("Variable"+value+" is not a number");
+                    if (isNaN(Number(val)) && !isNULL) {
+                        error(`Variable ${val} is not a number`);
                     }
                     break;
 
                 case 'string':
                     if (!(
-                        (value.startsWith('"') || value.endsWith('"')) ||
-                        (value.startsWith("'") || value.endsWith("'")) ||
-                        (value.startsWith('`') || value.endsWith('`')) 
-                    )&& !isNULL) {
-                        error("Variable"+value+" is not a string");
+                        (val.startsWith('"') && val.endsWith('"')) ||
+                        (val.startsWith("'") && val.endsWith("'")) ||
+                        (val.startsWith('`') && val.endsWith('`'))
+                    ) && !isNULL) {
+                        error(`Variable ${val} is not a string`);
                     }
                     break;
 
                 case 'boolean':
-                    if (
-                        !(value.match(/\b(true|false)\b/))&& !isNULL
-                    ) {
-                        error("Variable"+value+" is not a boolean");
+                    if (!(val.match(/\b(true|false)\b/) && !isNULL)) {
+                        error(`Variable ${val} is not a boolean`);
                     }
+                    break;
             }
 
-            node.type = NodeType.DECLARE
+            node.type = NodeType.DECLARE;
             node.params = {
                 name: varName,
                 type: varType,
-                value: value
-            }
+                value: val
+            };
+
         } else if (token.type === TokenType.Conditional) {
-            switch(token.value) {
+            switch (token.value) {
                 case 'if':
                     node.type = NodeType.IF;
                     nextToken();
                     token = getToken();
+
                     if (token.type !== TokenType.Shape) {
                         error(`Expected '(' after 'if', but got: ${token.value} (Type: ${token.type})`);
                     }
+
                     nextToken();
                     const condition = collectParam();
-                    // if ( closed == false ) {
-                    // }
-
                     const firstParam = condition[0];
 
                     if (firstParam.type !== TokenType.Identifier && firstParam.type !== TokenType.Value) {
                         error(`Expected identifier after 'if', but got: ${firstParam.value} (Type: ${firstParam.type})`);
                     }
+
                     if (condition[1]) {
                         const conditional = condition[1];
 
@@ -137,21 +132,13 @@ export const parse = (tokensK: Token[]): Node[] => {
 
                             node.params = {
                                 condition: {
-                                    firstValue: firstParam.type === TokenType.Identifier ?
-                                        "\\GET" :
-                                        firstParam.value,
+                                    firstValue: firstParam.type === TokenType.Identifier ? "\\GET" : firstParam.value,
                                     cond: conditional.value,
-                                    secondValue: secondParam.type === TokenType.Identifier ?
-                                        "\\GET" :
-                                        secondParam.value,
-                                    firstName: firstParam.type === TokenType.Identifier ?
-                                        firstParam.value :
-                                        undefined,
-                                    secondName: secondParam.type === TokenType.Identifier ?
-                                        secondParam.value :
-                                        undefined
+                                    secondValue: secondParam.type === TokenType.Identifier ? "\\GET" : secondParam.value,
+                                    firstName: firstParam.type === TokenType.Identifier ? firstParam.value : undefined,
+                                    secondName: secondParam.type === TokenType.Identifier ? secondParam.value : undefined
                                 }
-                            }
+                            };
                         }
                     } else {
                         node.params = {
@@ -160,30 +147,80 @@ export const parse = (tokensK: Token[]): Node[] => {
                                 secondValue: "true",
                                 cond: "=="
                             }
-                        }
+                        };
                     }
                     break;
             }
         } else if (token.type === TokenType.TGIO) {
+            // Manejo de la instrucción 'show'
             node.type = NodeType.SHOW;
             nextToken();
             const tags = collectTag();
-
             const joinedTags = tags.join(' ');
 
             nextToken();
-            if (getToken().value !== 'as') {
-                error(`Expected 'as' after value, but got: ${getToken().value} (Type: ${getToken().type} at index ${currentIndex})`);
+            if (!getToken() || getToken().value !== 'as') {
+                error(`Expected 'as' after value, but got: ${getToken() ? getToken().value : '??'} (Type: ${getToken().type} at index ${currentIndex})`);
             }
 
             nextToken();
-
             node.params = {
                 content: joinedTags,
                 route: sanitizeTokenValue(getToken().value)
+            };
+
+        } else if (token.value === 'component') {
+            // Manejo de la declaración de componentes
+            nextToken();
+            token = getToken();
+
+            if (token.type !== TokenType.Identifier) {
+                error(`Expected identifier after 'component', but got: ${token.value} (Type: ${token.type})`);
+            }
+
+            node.type = NodeType.CDECLARE;
+            nextToken();
+            token = getToken();
+
+            const tags = collectTag().join(' ');
+            node.params = {
+                name: token.value,
+                content: tags
+            };
+
+        } else if (token.type === TokenType.IERQ) {
+            // Manejo de la instrucción 'import'
+            node.type = NodeType.IMPORT;
+            nextToken();
+            token = getToken();
+
+            if (token.type !== TokenType.Identifier) {
+                error(`Expected identifier after 'import', but got: ${token.value} (Type: ${token.type})`);
+            }
+
+            node.params = {
+                name: token.value
+            };
+        } else if (token.value === '#') {
+            // This is a comment
+            nextToken();
+            token = getToken();
+            while (token.value !== '#') {
+                nextToken();
+                token = getToken();
+            }
+            nextToken();
+            node.type=NodeType.NONE;
+        } else if (token.value === 'exec') {
+            nextToken();
+            node.type=NodeType.EXEC;
+            const command = collectString();
+            node.params={
+                content: command
             }
         } else if (token.type === TokenType.EOF) {
-                break;
+            // Fin del archivo
+            break;
         } else {
             error(`Unexpected token: ${token.value} (Type: ${token.type})`);
         }
@@ -195,6 +232,7 @@ export const parse = (tokensK: Token[]): Node[] => {
     return nodes.map(NodeAdapter);
 };
 
+// Funciones auxiliares
 const getToken = (): Token => {
     return tokens[currentIndex];
 };
@@ -208,16 +246,14 @@ const collectString = (): string => {
     let str: string = '';
 
     while (token.type !== TokenType.Shape && !isStringEnd(token.value)) {
-        str += sanitizeTokenValue(token.value);
+        str += sanitizeTokenValue(token.value) + ' ';
         nextToken();
         token = getToken();
-        str += ' '; 
     }
 
-    str += sanitizeTokenValue(token.value);
+    str += sanitizeTokenValue(token.value); // Añadir el último token
     return str.trim();
 };
-
 
 const collectParam = (): Token[] => {
     let token = getToken();
@@ -250,7 +286,6 @@ const collectTag = (): string[] => {
 const isStringEnd = (value: string): boolean => {
     return value.endsWith(')');
 };
-
 
 const sanitizeTokenValue = (value: string): string => {
     return value.replace(/["'`]/g, '').replace(/\n/g, '').replace(/\r/g, '').replace('%', ' ');

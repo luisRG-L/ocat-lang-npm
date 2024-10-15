@@ -20,6 +20,7 @@
   ],
   "exclude": [
     "node_modules",                            // Excluir el directorio node_modules
-    "**/*.spec.ts"                             // Excluir archivos de pruebas
+    "**/*.spec.ts",                           // Excluir archivos de pruebas
+    "**/*.test.ts"
   ]
 }

@@ -1,7 +1,8 @@
-import { Variable } from './types/index.js';
+import { Variable, Component } from './types/index.js';
 
 export class Memory {
     private variables: Map<string, Variable> = new Map();
+    private components: Map<string, Component> = new Map();
 
     public declareVar(name?: string, value?: string, type?: string) {
         if(name && value && type) {
@@ -16,6 +17,23 @@ export class Memory {
     public getVar(name?: string) {
         if(name) {
             return this.variables.get(name);
+        }
+    }
+
+
+
+    public getComponent(name?: string) {
+        if(name) {
+            return this.components.get(name)?.value;
+        }
+    }
+
+    public declareComponent(name?: string, value?: string) {
+        if(name && value) {
+            this.components.set(name, {
+                name: name,
+                value: value
+            });
         }
     }
 }

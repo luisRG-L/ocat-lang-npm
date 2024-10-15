@@ -6,7 +6,12 @@ export enum NodeType {
     ERR,
     DECLARE,
     IF,
-    SHOW
+    SHOW,
+    STYLE,
+    IMPORT,
+    CDECLARE,
+    NONE,
+    EXEC
 }
 
 export interface Node {
