@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.6 ( Page-requests scripting & styling )
+
+### Added
+
+- Added scripting at page-requests
+- Added styling at page-requests
+
+### Fixed
+
+- routing styles and scripts
+
 ## 0.0.5 ( Project running )
 
 ### Added

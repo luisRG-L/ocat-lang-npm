@@ -1,6 +1,6 @@
 {
   "name": "ocat-lang",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "The oficial Orange Cat Programming Language",
   "homepage": "https://orangecatprog.com",
   "readme": "./README.md",
@@ -69,5 +69,8 @@
     "fs-extra": "^11.2.0",
     "ocat-lang": "file:"
   },
-  "markdown": "github"
+  "markdown": "github",
+  "publishConfig": {
+    "access": "public"
+  }
 }
