@@ -3,7 +3,7 @@
   "version": "0.0.6",
   "description": "The oficial Orange Cat Programming Language",
   "homepage": "https://orangecatprog.com",
-  "readme": "./README.md",
+  "readme": "./docs/README.md",
   "author": "LuisRG-L, Orange Cat <info@orangecatprog.com>",
   "license": "MIT",
   "repository": {

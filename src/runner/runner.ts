@@ -8,13 +8,14 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { init } from '../lang.js';
 import { exec } from 'child_process';
+import { Variable } from '../memory/types/Variable.js';
+
 
 const memory: Memory = new Memory();
 const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../json/config.json');
 const data = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(data);
 
-let usePort: boolean;
 let index: number = 0;
 const routes: { name: string; result: string }[] = [];
 
@@ -47,14 +48,14 @@ export const run = (nodes: Node[]): void => {
                 break;
 
             case NodeType.SHOW:
-                usePort = true;
+                {
                 const route = '/'+node.params.route||`/404/${++index}`;
                 const processedContent = processHTML(node.params.content);
                 app.get(route, (req, res) => {
                     res.send(processedContent);
                 });
                 routes.push({ name: route, result: `<style>${styles}</style>${processedContent}`});
-                break;
+                break; }
 
             case NodeType.STYLE:
                 styles = node.params.content || '* { box-sizing: border-box; }';
@@ -76,8 +77,8 @@ export const run = (nodes: Node[]): void => {
 };
 
 // Función para manejar comandos
-const commandite = (command: string, node: Node): any => {
-    let value: any = "";
+const commandite = (command: string, node: Node) => {
+    let value: Variable|string|null|undefined = "";
     switch (command) {
         case "GET":
             value = memory.getVar(node.params.name);
@@ -89,7 +90,7 @@ const commandite = (command: string, node: Node): any => {
 };
 
 // Función para evaluar condiciones
-const commanditeCond = (node: Condition): boolean | undefined => {
+/*const commanditeCond = (node: Condition): boolean | undefined => {
     let value: boolean | undefined = false;
 
     switch (node.cond) {
@@ -116,7 +117,7 @@ const commanditeCond = (node: Condition): boolean | undefined => {
     }
 
     return value;
-};
+};*/
 app.listen(config.port, () => {
     console.log(config.port === 0o0 ? '' : `Project running on port http://localhost:${config.port}`);
 });
