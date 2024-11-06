@@ -6,6 +6,10 @@ The oficial Orange Cat Programming Language
 > See the [Orange Cat website](https://orangecatprog.com) and the [Orange Cat documentation](./docs/) for more information.
 >
 
+## Your reviews
+
+Use the [Review form](https://forms.gle/UnCednmQ657KqSoB9) to leave a review.
+
 ## Install
 
 > [!TIP]
