@@ -1,4 +1,4 @@
-import { Variable, Component } from './types/index.js';
+import { Variable, Component } from './types/';
 
 export class Memory {
     private variables: Map<string, Variable> = new Map();

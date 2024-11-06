@@ -1,18 +1,16 @@
-import { Node, NodeType, Condition } from './types/index.js';
-import { error } from '../error/error.js';
-import { Memory } from '../memory/index.js';
-import { print } from '../print/index.js';
+import { Node, NodeType } from './parser/types';
+import { error } from '../error/error';
+import { Memory } from '../memory/';
+import { print } from '../print/';
 import express from 'express';
 import * as fs from 'fs';
-import { fileURLToPath } from 'url';
 import path from 'path';
-import { init } from '../lang.js';
+import { init } from '../lang';
 import { exec } from 'child_process';
-import { Variable } from '../memory/types/Variable.js';
 
 
 const memory: Memory = new Memory();
-const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../json/config.json');
+const configPath = path.resolve(__dirname, '../../json/config.json'); // TODO: Change this path
 const data = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(data);
 
@@ -28,8 +26,8 @@ export const run = (nodes: Node[]): void => {
         switch (node.type) {
             case NodeType.OUTPUT:
                 if (node.params.content?.startsWith("\\")) {
-                    const command = node.params.content.replace("\\", "");
-                    print(commandite(command, node));
+                    //const command = node.params.content.replace("\\", "");
+                    //print(commandite(command, node));
                 } else {
                     print(node.params.content);
                 }
@@ -77,7 +75,7 @@ export const run = (nodes: Node[]): void => {
 };
 
 // Función para manejar comandos
-const commandite = (command: string, node: Node) => {
+/*const commandite = (command: string, node: Node) => {
     let value: Variable|string|null|undefined = "";
     switch (command) {
         case "GET":
@@ -87,7 +85,7 @@ const commandite = (command: string, node: Node) => {
             error(`Unknown command: ${command}`);
     }
     return value;
-};
+};*/
 
 // Función para evaluar condiciones
 /*const commanditeCond = (node: Condition): boolean | undefined => {

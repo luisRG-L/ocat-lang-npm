@@ -1,4 +1,4 @@
-import { Node } from '../runner/index.js';
+import { Node } from '../runner/';
 
 export const NodeAdapter = (node: Node) => {
     const newNode: Node = node;

@@ -1,6 +1,6 @@
 #!/usr/bin/env node	
 
-import { init } from './lang.js';
+import { init } from './lang';
 
 const cmd1 = process.argv[2];
 

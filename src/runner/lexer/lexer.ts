@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import {Token, TokenType} from './types/index.js';
+import {Token, TokenType} from './types';
 
-import {Lexical} from '../adapters/index.js';
+import {Lexical} from '../../adapters/';
 
 export const tokenize = (input: string): Token[] => {
     const tokens: Token[] = [];

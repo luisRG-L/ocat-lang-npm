@@ -1,2 +1,2 @@
-export * from './Variable.js';
-export * from './Component.js';
+export * from './Variable';
+export * from './Component';

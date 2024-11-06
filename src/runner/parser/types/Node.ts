@@ -1,5 +1,5 @@
-import { Token } from './Token.js';
-import { Param } from './Data.js'
+import { Token } from '../../lexer/types/';
+import { Param } from './Data';
 
 export enum NodeType {
     OUTPUT,

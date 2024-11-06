@@ -1,6 +1,7 @@
-import { Node, NodeType, Token, TokenType } from './types/index.js';
-import { error } from '../error/error.js';
-import { NodeAdapter } from '../adapters/adapters.js';
+import { Node, NodeType } from './types';
+import  {Token, TokenType} from '../lexer/types';
+import { error } from '../../error/error';
+import { NodeAdapter } from '../../adapters/adapters';
 
 let tokens: Token[];
 let currentIndex: number = 0;
@@ -99,7 +100,7 @@ export const parse = (tokensK: Token[]): Node[] => {
             };
 
         } else if (token.type === TokenType.Conditional) {
-            switch (token.value) {
+            /*switch (token.value) {
                 case 'if':
                     node.type = NodeType.IF;
                     nextToken();
@@ -150,7 +151,7 @@ export const parse = (tokensK: Token[]): Node[] => {
                         };
                     }
                     break;
-            }
+            }*/
         } else if (token.type === TokenType.TGIO) {
             // Manejo de la instrucción 'show'
             node.type = NodeType.SHOW;
@@ -255,7 +256,7 @@ const collectString = (): string => {
     return str.trim();
 };
 
-const collectParam = (): Token[] => {
+/*const collectParam = (): Token[] => {
     let token = getToken();
     let param: Token[] = [];
 
@@ -268,11 +269,11 @@ const collectParam = (): Token[] => {
     return param.map(token => ({
         type: token.type, value: token.value.trim()
     }));
-};
+};*/
 
 const collectTag = (): string[] => {
     let token = getToken();
-    let param: string[] = [];
+    const param: string[] = [];
 
     while (token.type !== TokenType.TGIO) {
         param.push(token.value.trim());

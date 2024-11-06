@@ -1,1 +1,1 @@
-export * from './lexical.js';
+export * from './lexical';

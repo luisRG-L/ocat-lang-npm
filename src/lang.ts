@@ -9,7 +9,7 @@ import {
 
     // From the runner
     run
-} from './runner/index.js';
+} from './runner/';
 
 export function init (test: boolean, dev: boolean, fileName: string) {
     if(test) {
