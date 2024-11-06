@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.0.7 ( Structured Code )
+
+### Added
+
+- Added structured code
+
+### Deprecated
+
+- Use `<script>` and `<style>` tags
+
+### Deleted
+
+- Nothing
+
 ## 0.0.6 ( Page-requests scripting & styling )
 
 ### Added
