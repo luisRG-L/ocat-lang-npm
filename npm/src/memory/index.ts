@@ -1,1 +1,2 @@
-export * from './SavedMemory.js'
+export * from './SavedMemory';
+export * from './types';

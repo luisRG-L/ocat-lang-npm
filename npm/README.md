@@ -39,6 +39,25 @@ LuisRG-L, Orange Cat.
 
 Email: <info@orangecatprog.com>
 
-## ChangeLog
+## ChangeLog and Features
 
 [See the changelog](CHANGELOG.md)
+
+## Last version features
+
+The last version of Orange Cat was 0.8.0
+
+### Added
+
+- global css
+- structured sources
+
+### Fixed
+
+- Bug with the print statement
+- Bug with the import statement
+- Scripting in PageRequests
+
+## The version system
+
+The version system is a.b.c (Major, Minor, Patch)

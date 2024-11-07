@@ -1,7 +1,7 @@
 import { Node, NodeType } from './types';
-import  {Token, TokenType} from '../lexer/types';
-import { error } from '../../error/error';
-import { NodeAdapter } from '../../adapters/adapters';
+import  {Token, TokenType} from '../lexer';
+import { error as err, ErrorType } from '../../error';
+import { NodeAdapter } from '../../adapters';
 
 let tokens: Token[];
 let currentIndex: number = 0;
@@ -9,8 +9,11 @@ let currentIndex: number = 0;
 export const parse = (tokensK: Token[]): Node[] => {
     const nodes: Node[] = [];
     tokens = tokensK;
-    currentIndex = 0; // Reiniciamos el índice por si se llama varias veces a parse
-
+    let line = 1;
+    currentIndex = 0; 
+    const error = (message: string) => {
+        err(message, line, ErrorType.SyntaxError);
+    }
     while (currentIndex < tokens.length) {
         let token: Token = getToken();
         const node: Node = {
@@ -18,10 +21,10 @@ export const parse = (tokensK: Token[]): Node[] => {
             params: {
                 cause: 'Unknown token error'
             },
-            base: token
+            base: token,
+            line
         };
 
-        // Manejo de la instrucción 'print'
         if (token.type === TokenType.IO && token.value === 'print') {
             nextToken();
             token = getToken();
@@ -47,11 +50,10 @@ export const parse = (tokensK: Token[]): Node[] => {
             token = getToken();
 
         } else if (token.type === TokenType.Datatype) {
-            // Manejo de la declaración de variable
             const varType = token.value;
             nextToken();
             token = getToken();
-            const varName = token.value; // Obtener el nombre de la variable
+            const varName = token.value;
             nextToken();
             token = getToken();
 
@@ -152,7 +154,7 @@ export const parse = (tokensK: Token[]): Node[] => {
                     }
                     break;
             }*/
-        } else if (token.type === TokenType.TGIO) {
+        } else if (token.type === TokenType.PageRequest) {
             // Manejo de la instrucción 'show'
             node.type = NodeType.SHOW;
             nextToken();
@@ -195,12 +197,12 @@ export const parse = (tokensK: Token[]): Node[] => {
             nextToken();
             token = getToken();
 
-            if (token.type !== TokenType.Identifier) {
-                error(`Expected identifier after 'import', but got: ${token.value} (Type: ${token.type})`);
+            if (token.type !== TokenType.Value) {
+                error(`Expected value after 'import', but got: ${token.value} (Type: ${token.type})`);
             }
 
             node.params = {
-                name: token.value
+                name: sanitizeTokenValue(token.value)
             };
         } else if (token.value === '#') {
             // This is a comment
@@ -219,6 +221,8 @@ export const parse = (tokensK: Token[]): Node[] => {
             node.params={
                 content: command
             }
+        } else if (token.type === TokenType.EOL) {
+            line++;
         } else if (token.type === TokenType.EOF) {
             // Fin del archivo
             break;
@@ -252,7 +256,9 @@ const collectString = (): string => {
         token = getToken();
     }
 
-    str += sanitizeTokenValue(token.value); // Añadir el último token
+    if (isStringEnd(token.value)) {
+        str += sanitizeTokenValue(token.value);
+    }
     return str.trim();
 };
 
@@ -275,7 +281,7 @@ const collectTag = (): string[] => {
     let token = getToken();
     const param: string[] = [];
 
-    while (token.type !== TokenType.TGIO) {
+    while (token.type !== TokenType.PageRequest) {
         param.push(token.value.trim());
         nextToken();
         token = getToken();
@@ -285,7 +291,7 @@ const collectTag = (): string[] => {
 };
 
 const isStringEnd = (value: string): boolean => {
-    return value.endsWith(')');
+    return value.endsWith('"') || value.endsWith("'") || value.endsWith('`');
 };
 
 const sanitizeTokenValue = (value: string): string => {

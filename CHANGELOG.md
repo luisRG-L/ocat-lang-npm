@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.0 ( Performance & Bug Fixing )
+
+### Added
+
+- Version system changed
+- global css
+- structured sources
+
+### Fixed
+
+- Bug with the print statement
+- Bug with the import statement
+- Scripting in PageRequests
+
 ## 0.0.7 ( Structured Code )
 
 ### Added

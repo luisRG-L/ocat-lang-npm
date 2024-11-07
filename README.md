@@ -61,3 +61,22 @@ Email: <info@orangecatprog.com>
 
 > [!WARNING]
 > Orange Cat is still in development
+
+## Last version features
+
+The last version of Orange Cat was 0.8.0
+
+### Added
+
+- global css
+- structured sources
+
+### Fixed
+
+- Bug with the print statement
+- Bug with the import statement
+- Scripting in PageRequests
+
+## The version system
+
+The version system is a.b.c (Major, Minor, Patch)

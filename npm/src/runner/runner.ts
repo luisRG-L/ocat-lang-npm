@@ -1,5 +1,5 @@
 import { Node, NodeType } from './parser/types';
-import { error } from '../error/error';
+import { error as err, ErrorType } from '../error';
 import { Memory } from '../memory/';
 import { print } from '../print/';
 import express from 'express';
@@ -10,7 +10,7 @@ import { exec } from 'child_process';
 
 
 const memory: Memory = new Memory();
-const configPath = path.resolve(__dirname, '../../json/config.json'); // TODO: Change this path
+const configPath = path.resolve(__dirname, '../../json/config.json');
 const data = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(data);
 
@@ -22,7 +22,11 @@ const app = express();
 let styles = '';
 
 export const run = (nodes: Node[]): void => {
+    let usePort = false;
     nodes.forEach((node) => {
+        const error = (message: string, type: ErrorType = ErrorType.RuntimeError) => {
+            err(message, node.line, type);
+        }
         switch (node.type) {
             case NodeType.OUTPUT:
                 if (node.params.content?.startsWith("\\")) {
@@ -34,7 +38,7 @@ export const run = (nodes: Node[]): void => {
                 break;
 
             case NodeType.ERR:
-                error(node.params.cause);
+                error(node.params.cause ?? config.DERR);
                 break;
 
             case NodeType.DECLARE:
@@ -47,11 +51,12 @@ export const run = (nodes: Node[]): void => {
 
             case NodeType.SHOW:
                 {
-                const route = '/'+node.params.route||`/404/${++index}`;
+                const route = '/'+(node.params.route ?? `404/${++index}`);
                 const processedContent = processHTML(node.params.content);
                 app.get(route, (req, res) => {
                     res.send(processedContent);
                 });
+                usePort = true;
                 routes.push({ name: route, result: `<style>${styles}</style>${processedContent}`});
                 break; }
 
@@ -72,6 +77,11 @@ export const run = (nodes: Node[]): void => {
                 break;
         }
     });
+    if (usePort) {
+        app.listen(config.port, () => {
+            console.log(config.port === 0o0 ? '' : `Project running on port http://localhost:${config.port}`);
+        });
+    }
 };
 
 // Función para manejar comandos
@@ -116,9 +126,6 @@ export const run = (nodes: Node[]): void => {
 
     return value;
 };*/
-app.listen(config.port, () => {
-    console.log(config.port === 0o0 ? '' : `Project running on port http://localhost:${config.port}`);
-});
 
 const processHTML = (html?: string) => {
     const componentRegex = /<\{(\w+)\}>/g;

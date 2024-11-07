@@ -18,4 +18,5 @@ export interface Node {
     type: NodeType;
     params: Param;
     base: Token;
+    line: number;
 }

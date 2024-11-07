@@ -41,7 +41,12 @@ export const tokenize = (input: string): Token[] => {
             word === "[" ||
             word === "]"
         ){
-            token.type = TokenType.TGIO;
+            token.type = TokenType.PageRequest;
+        }
+        else if (
+            (word === '\n')
+        ) {
+            token.type = TokenType.EOL;
         }
         else if (
             (word === '(' || word === ')')
