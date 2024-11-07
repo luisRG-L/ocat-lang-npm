@@ -2,6 +2,10 @@
 
 The oficial Orange Cat Programming Language
 
+## Your reviews
+
+Use the [Review form](https://forms.gle/UnCednmQ657KqSoB9) to leave a review.
+
 ## Install
 
 ```bash
