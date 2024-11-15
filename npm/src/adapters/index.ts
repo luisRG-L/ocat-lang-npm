@@ -1,2 +1,2 @@
-export * from './lexical';
-export * from './adapters';
+export * from "./lexical";
+export * from "./adapters";

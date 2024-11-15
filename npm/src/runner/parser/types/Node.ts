@@ -1,5 +1,5 @@
-import { Token } from '../../lexer/types/';
-import { Param } from './Data';
+import { Token } from "../../lexer/types/";
+import { Param } from "./Data";
 
 export enum NodeType {
     OUTPUT,
@@ -11,7 +11,13 @@ export enum NodeType {
     IMPORT,
     CDECLARE,
     NONE,
-    EXEC
+    EXEC,
+    META,
+    EXPORTW,
+    Function,
+    FCall,
+    Create,
+    UseStrict,
 }
 
 export interface Node {

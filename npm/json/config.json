@@ -1,5 +1,9 @@
 {
     "port": "8080",
     "on404": "404 not found",
-    "ENCFE": "Not command pushed"
+    "ENCFE": "Not command pushed",
+    "CNFE": "Component not found",
+    "DERR": "Error",
+    "%lang-start-var%": "",
+    "%lang-end-var%": ""
 }

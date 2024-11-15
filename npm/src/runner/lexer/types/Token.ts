@@ -5,6 +5,7 @@ export enum TokenType {
     IO = "IO",
     Datatype = "Datatype",
     Function = "Function",
+    FCall = "Function Call",
     Conditional = "Conditional",
     Loop = "Loop",
     Keyword = "Keyword",
@@ -16,6 +17,13 @@ export enum TokenType {
     PageRequest = "Page-Request",
     IERQ = "IMPORT/EXPORT REQUEST",
     EOL = "End of Line",
+    Comment = "Comment",
+    Component = "Component",
+    Meta = "Meta",
+    ExportW = "Wexport",
+    Block = "Block",
+    SCS = "Source Control Sentence",
+    ORDER = "ORDER",
 }
 
 export interface Token {

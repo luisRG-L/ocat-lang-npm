@@ -1,0 +1,9 @@
+{
+    "port": "8080", // Port to run the project
+    "on404": "404 not found", // Message when 404 is not found
+    "ENCFE": "Not command pushed", // CustomError message when command is not found
+    "CNFE": "Component not found", // CustomError message when component is not found
+    "DERR": "Error", // CustomError message when error is found
+    "%lang-start-var%": "",
+    "%lang-end-var%": ""
+}

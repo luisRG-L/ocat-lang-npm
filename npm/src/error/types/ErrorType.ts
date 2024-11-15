@@ -4,4 +4,5 @@ export enum ErrorType {
     RuntimeError = "Runtime Error",
     ExecutionError = "Execution Error",
     Excpetion = "Exception",
+    GetError = "GetError"
 }

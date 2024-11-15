@@ -1,7 +1,7 @@
-import { Node, NodeType } from './types';
-import  {Token, TokenType} from '../lexer';
-import { error as err, ErrorType } from '../../error';
-import { NodeAdapter } from '../../adapters';
+import { Node, NodeType } from "./types";
+import { Token, TokenType } from "../lexer";
+import { CustomError, OSyntaxError, Warning } from "../../error";
+import { NodeAdapter } from "../../adapters";
 
 let tokens: Token[];
 let currentIndex: number = 0;
@@ -10,234 +10,292 @@ export const parse = (tokensK: Token[]): Node[] => {
     const nodes: Node[] = [];
     tokens = tokensK;
     let line = 1;
-    currentIndex = 0; 
-    const error = (message: string) => {
-        err(message, line, ErrorType.SyntaxError);
-    }
+    currentIndex = 0;
+
     while (currentIndex < tokens.length) {
-        let token: Token = getToken();
-        const node: Node = {
+        let token = getToken();
+        let node: Node = {
             type: NodeType.ERR,
-            params: {
-                cause: 'Unknown token error'
-            },
+            params: { cause: "Unknown token error" },
             base: token,
-            line
+            line,
         };
 
-        if (token.type === TokenType.IO && token.value === 'print') {
-            nextToken();
-            token = getToken();
-
-            if (token.type !== TokenType.Shape) {
-                error(`Expected '(' after 'print', but got: ${token.value} (Type: ${token.type})`);
-            }
-
-            nextToken();
-            token = getToken();
-            node.type = NodeType.OUTPUT;
-
-            if (token.value.startsWith('"') || token.value.startsWith("'")) {
-                node.params = { content: collectString() };
-            } else if (token.type === TokenType.Identifier) {
-                node.params = {
-                    content: "\\GET",
-                    name: getToken().value
-                };
-            }
-
-            nextToken();
-            token = getToken();
-
-        } else if (token.type === TokenType.Datatype) {
-            const varType = token.value;
-            nextToken();
-            token = getToken();
-            const varName = token.value;
-            nextToken();
-            token = getToken();
-
-            if (token.type !== TokenType.Assign) {
-                error("Undefined assigner");
-            }
-
-            nextToken();
-            let val: string;
-            if (token.value.startsWith('"') || token.value.startsWith("'")) {
-                val = collectString();
-            } else {
-                val = getToken().value;
-            }
-
-            const isNULL: boolean = val === "null";
-            switch (varType) {
-                case "int":
-                    if (isNaN(Number(val)) && !isNULL) {
-                        error(`Variable ${val} is not a number`);
+        try {
+            switch (token.type) {
+                case TokenType.IO:
+                    if (token.value === "print") {
+                        nextToken();
+                        token = getToken();
+                        if (token.type !== TokenType.Shape) {
+                            throw new OSyntaxError(
+                                `Expected '(' after 'print', but got: ${token.value} (Type: ${token.type})`
+                            );
+                        }
+                        node.type = NodeType.OUTPUT;
+                        nextToken();
+                        node.params = { content: collectString() };
+                        nextToken();
                     }
                     break;
 
-                case 'string':
-                    if (!(
-                        (val.startsWith('"') && val.endsWith('"')) ||
-                        (val.startsWith("'") && val.endsWith("'")) ||
-                        (val.startsWith('`') && val.endsWith('`'))
-                    ) && !isNULL) {
-                        error(`Variable ${val} is not a string`);
-                    }
-                    break;
-
-                case 'boolean':
-                    if (!(val.match(/\b(true|false)\b/) && !isNULL)) {
-                        error(`Variable ${val} is not a boolean`);
-                    }
-                    break;
-            }
-
-            node.type = NodeType.DECLARE;
-            node.params = {
-                name: varName,
-                type: varType,
-                value: val
-            };
-
-        } else if (token.type === TokenType.Conditional) {
-            /*switch (token.value) {
-                case 'if':
-                    node.type = NodeType.IF;
+                case TokenType.IERQ:
+                    node.type = NodeType.IMPORT;
                     nextToken();
                     token = getToken();
+                    if (token.type !== TokenType.Value) {
+                        throw new OSyntaxError(
+                            `Expected value after 'import', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    node.params = { name: sanitizeTokenValue(token.value) };
+                    break;
 
-                    if (token.type !== TokenType.Shape) {
-                        error(`Expected '(' after 'if', but got: ${token.value} (Type: ${token.type})`);
+                case TokenType.Component:
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Identifier) {
+                        throw new OSyntaxError(
+                            `Expected identifier after 'component', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    const name = sanitizeTokenValue(token.value);
+                    node.type = NodeType.CDECLARE;
+
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.PageRequest) {
+                        throw new OSyntaxError(
+                            `Expected page request after 'component', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    nextToken();
+                    token = getToken();
+                    const params = collectTag().join(" ");
+
+                    node.params = { name, content: params };
+                    break;
+
+                case TokenType.PageRequest:
+                    node.type = NodeType.SHOW;
+                    nextToken();
+                    const tags = collectTag();
+                    const joinedTags = tags
+                        .map((tag) => tag.trim())
+                        .join(" ")
+                        .trim();
+
+                    if (joinedTags.startsWith("%css-global%")) {
+                        node.type = NodeType.STYLE;
+                        node.params = {
+                            content: joinedTags.replace("%css-global%", ""),
+                        };
+                        break;
                     }
 
                     nextToken();
-                    const condition = collectParam();
-                    const firstParam = condition[0];
-
-                    if (firstParam.type !== TokenType.Identifier && firstParam.type !== TokenType.Value) {
-                        error(`Expected identifier after 'if', but got: ${firstParam.value} (Type: ${firstParam.type})`);
+                    if (!getToken() || getToken().value !== "as") {
+                        throw new OSyntaxError(
+                            `Expected 'as' after value, but got: ${
+                                getToken() ? getToken().value : "\\eof"
+                            } (Type: ${
+                                getToken() ? getToken().type : TokenType.EOF
+                            } at index ${currentIndex})`
+                        );
                     }
 
-                    if (condition[1]) {
-                        const conditional = condition[1];
+                    nextToken();
+                    node.params = {
+                        content: joinedTags,
+                        route: sanitizeTokenValue(getToken().value),
+                    };
+                    break;
 
-                        if (conditional.type !== TokenType.Operator) {
-                            error(`Expected operator after identifier, but got: ${conditional.value} (Type: ${conditional.type})`);
-                        }
+                case TokenType.EOF:
+                    return nodes.map(NodeAdapter);
 
-                        if (condition[2]) {
-                            const secondParam = condition[2];
-                            if (secondParam.type !== TokenType.Identifier && secondParam.type !== TokenType.Value) {
-                                error(`Expected identifier after operator, but got: ${secondParam.value} (Type: ${secondParam.type})`);
-                            }
+                case TokenType.Comment:
+                    skipComment();
+                    node.type = NodeType.NONE;
+                    break;
 
-                            node.params = {
-                                condition: {
-                                    firstValue: firstParam.type === TokenType.Identifier ? "\\GET" : firstParam.value,
-                                    cond: conditional.value,
-                                    secondValue: secondParam.type === TokenType.Identifier ? "\\GET" : secondParam.value,
-                                    firstName: firstParam.type === TokenType.Identifier ? firstParam.value : undefined,
-                                    secondName: secondParam.type === TokenType.Identifier ? secondParam.value : undefined
-                                }
-                            };
-                        }
+                case TokenType.Meta:
+                    node.type = NodeType.META;
+                    if (token.value === "title") {
+                        node.params.type = "\\title";
                     } else {
-                        node.params = {
-                            condition: {
-                                firstValue: firstParam.value,
-                                secondValue: "true",
-                                cond: "=="
+                        nextToken();
+                        token = getToken();
+                        if (token.type !== TokenType.Value) {
+                            throw new OSyntaxError(
+                                `Expected value after 'meta', but got: ${token.value} (Type: ${token.type})`
+                            );
+                        }
+                        node.params.type = sanitizeTokenValue(collectString());
+                    }
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Value) {
+                        throw new OSyntaxError(
+                            `Expected value after 'meta', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    node.params.content = sanitizeTokenValue(collectString());
+                    break;
+
+                case TokenType.Datatype:
+                    const type = token.value;
+                    nextToken();
+                    token = getToken();
+                    const vname = token.value;
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Assign) {
+                        throw new OSyntaxError(
+                            `Expected '=' after variable name, but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Value) {
+                        throw new OSyntaxError(
+                            `Expected value after '=', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    node.type = NodeType.DECLARE;
+                    node.params.name = vname;
+                    if (type === "string") {
+                        node.params.value = sanitizeTokenValue(collectString());
+                    } else {
+                        node.params.value = sanitizeTokenValue(token.value);
+                    }
+                    node.params.type = type;
+                    break;
+
+                case TokenType.ExportW:
+                    node.type = NodeType.EXPORTW;
+                    break;
+
+                case TokenType.Conditional:
+                    node.params.condition = {};
+                    switch (token.value) {
+                        case "if":
+                            node.type = NodeType.IF;
+                            nextToken();
+                            token = getToken();
+                            if (token.type !== TokenType.Shape) {
+                                throw new OSyntaxError(
+                                    `Expected '(' after 'if', but got: ${token.value} (Type: ${token.type})`
+                                );
                             }
-                        };
+                            nextToken();
+                            token = getToken();
+                            const params = collectParam().join(" ");
+                            nextToken();
+                            token = getToken();
+
+                            node.params.condition.cond = params;
+                            node.params.condition.body = collectBlock();
+                            nextToken();
+                            token = getToken();
+                            break;
                     }
                     break;
-            }*/
-        } else if (token.type === TokenType.PageRequest) {
-            // Manejo de la instrucción 'show'
-            node.type = NodeType.SHOW;
-            nextToken();
-            const tags = collectTag();
-            const joinedTags = tags.join(' ');
 
-            nextToken();
-            if (!getToken() || getToken().value !== 'as') {
-                error(`Expected 'as' after value, but got: ${getToken() ? getToken().value : '??'} (Type: ${getToken().type} at index ${currentIndex})`);
+                case TokenType.Function:
+                    node.type = NodeType.Function;
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Identifier) {
+                        throw new OSyntaxError(
+                            `Expected identifier after 'func', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    node.params.name = sanitizeTokenValue(token.value);
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Block) {
+                        throw new OSyntaxError(
+                            `Expected '{' after function name, but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    nextToken();
+                    token = getToken();
+                    const content = collectBlock();
+                    node.params.content = content;
+                    break;
+
+                case TokenType.FCall:
+                    node.type = NodeType.FCall;
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Identifier) {
+                        throw new OSyntaxError(
+                            `Expected identifier after 'call', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    node.params.name = sanitizeTokenValue(token.value);
+
+                    break;
+
+                case TokenType.ORDER:
+                    const orderName = token.value.replace("@", "");
+                    if (orderName === "strict") {
+                        node.type = NodeType.UseStrict;
+                    }
+                    break;
+
+                case TokenType.SCS:
+                    node.type = NodeType.Create;
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Identifier) {
+                        throw new OSyntaxError(
+                            `Expected identifier after 'call', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    const dtype = sanitizeTokenValue(token.value);
+                    node.params.type = dtype;
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Value) {
+                        throw new OSyntaxError(
+                            `Expected value after 'call', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    const dname = sanitizeTokenValue(collectString());
+                    node.params.name = dname;
+                    if (dtype === "file") {
+                        nextToken();
+                        token = getToken();
+                        if (token.type !== TokenType.Value) {
+                            throw new OSyntaxError(
+                                `Expected value after 'call', but got: ${token.value} (Type: ${token.type})`
+                            );
+                        }
+                        const content = sanitizeTokenValue(collectString());
+                        node.params.content = content;
+                    }
+                    break;
+
+                default:
+                    throw new OSyntaxError(
+                        `Unexpected token: ${token.value} (Type: ${token.type})`
+                    );
             }
 
             nextToken();
-            node.params = {
-                content: joinedTags,
-                route: sanitizeTokenValue(getToken().value)
-            };
-
-        } else if (token.value === 'component') {
-            // Manejo de la declaración de componentes
-            nextToken();
-            token = getToken();
-
-            if (token.type !== TokenType.Identifier) {
-                error(`Expected identifier after 'component', but got: ${token.value} (Type: ${token.type})`);
+            nodes.push(NodeAdapter(node));
+        } catch (e) {
+            if (e instanceof Warning || e instanceof CustomError) {
+                e.display(line);
             }
-
-            node.type = NodeType.CDECLARE;
-            nextToken();
-            token = getToken();
-
-            const tags = collectTag().join(' ');
-            node.params = {
-                name: token.value,
-                content: tags
-            };
-
-        } else if (token.type === TokenType.IERQ) {
-            // Manejo de la instrucción 'import'
-            node.type = NodeType.IMPORT;
-            nextToken();
-            token = getToken();
-
-            if (token.type !== TokenType.Value) {
-                error(`Expected value after 'import', but got: ${token.value} (Type: ${token.type})`);
-            }
-
-            node.params = {
-                name: sanitizeTokenValue(token.value)
-            };
-        } else if (token.value === '#') {
-            // This is a comment
-            nextToken();
-            token = getToken();
-            while (token.value !== '#') {
-                nextToken();
-                token = getToken();
-            }
-            nextToken();
-            node.type=NodeType.NONE;
-        } else if (token.value === 'exec') {
-            nextToken();
-            node.type=NodeType.EXEC;
-            const command = collectString();
-            node.params={
-                content: command
-            }
-        } else if (token.type === TokenType.EOL) {
-            line++;
-        } else if (token.type === TokenType.EOF) {
-            // Fin del archivo
-            break;
-        } else {
-            error(`Unexpected token: ${token.value} (Type: ${token.type})`);
         }
-
-        nextToken();
-        nodes.push(node);
     }
 
-    return nodes.map(NodeAdapter);
+    return nodes;
 };
 
-// Funciones auxiliares
 const getToken = (): Token => {
     return tokens[currentIndex];
 };
@@ -248,10 +306,10 @@ const nextToken = (): void => {
 
 const collectString = (): string => {
     let token = getToken();
-    let str: string = '';
+    let str: string = "";
 
     while (token.type !== TokenType.Shape && !isStringEnd(token.value)) {
-        str += sanitizeTokenValue(token.value) + ' ';
+        str += sanitizeTokenValue(token.value) + " ";
         nextToken();
         token = getToken();
     }
@@ -262,20 +320,35 @@ const collectString = (): string => {
     return str.trim();
 };
 
-/*const collectParam = (): Token[] => {
+const collectBlock = (): string => {
     let token = getToken();
-    let param: Token[] = [];
+    let str: string = "";
 
-    while (token.type !== TokenType.Shape) {
-        param.push(token);
+    while (token.type !== TokenType.Block) {
+        str += token.value + " ";
         nextToken();
         token = getToken();
     }
 
-    return param.map(token => ({
-        type: token.type, value: token.value.trim()
-    }));
-};*/
+    str += token.value;
+    return str.replace(/\{/g, "").replace(/\}/g, "").trim();
+};
+
+const collectParam = (): string[] => {
+    let token = getToken();
+    let param: string[] = [];
+
+    while (token.type !== TokenType.Shape) {
+        param.push(token.value);
+        nextToken();
+        token = getToken();
+    }
+
+    nextToken();
+    token = getToken();
+    param.push(token.value);
+    return param;
+};
 
 const collectTag = (): string[] => {
     let token = getToken();
@@ -291,9 +364,14 @@ const collectTag = (): string[] => {
 };
 
 const isStringEnd = (value: string): boolean => {
-    return value.endsWith('"') || value.endsWith("'") || value.endsWith('`');
+    return value.endsWith('"') || value.endsWith("'") || value.endsWith("`");
 };
 
 const sanitizeTokenValue = (value: string): string => {
-    return value.replace(/["'`]/g, '').replace(/\n/g, '').replace(/\r/g, '').replace('%', ' ');
+    return value
+        .replace(/["'`]/g, "")
+        .replace(/\n/g, "")
+        .replace(/\r/g, "")
+        .replace("%", " ");
 };
+function skipComment() {}

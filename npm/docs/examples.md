@@ -14,7 +14,7 @@ print ( "Hello World!" )
 This program creates a basic webpage with a 'H1' title and two paragraphs.
 
 > [!NOTE]
-> Don't use <html> or <body> tags in your program.
+> Don't use `<html>` or `<body>` tags in your program.
 
 ```ocat
 [
@@ -33,6 +33,7 @@ This program creates a basic webpage with a 'H1' title and two paragraphs. The w
 
 ```ocat
 [
+%css-global%
 p {
     color: red;
     font-size: 20px;
@@ -41,10 +42,9 @@ h1 {
     color: blue;
     font-size: 30px;
 }
-] as 'style'
+]
 
 [
-<link href="./style" rel="stylesheet" type="text/css">
 <h1>Hello World</h1>
 <p>This is a basic webpage</p>
 <p>This is a paragraph</p>
@@ -60,6 +60,7 @@ This program creates a basic webpage with a 'H1' title and two paragraphs. The w
 
 ```ocat
 [
+%css-global%
 p {
     color: red;
     font-size: 20px;
@@ -68,7 +69,7 @@ h1 {
     color: blue;
     font-size: 30px;
 }
-] as 'style'
+]
 
 [
 function changeColor() {
@@ -77,7 +78,6 @@ function changeColor() {
 ] as 'script'
 
 [
-<link href="./style" rel="stylesheet" type="text/css" />
 < src="./script" />
 <h1 onclick="changeColor()">Hello World</h1>
 <p>This is a basic webpage</p>

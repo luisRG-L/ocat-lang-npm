@@ -11,9 +11,6 @@ export interface Param {
 }
 
 export interface Condition {
-    firstValue?: string;
-    secondValue?: string;
     cond?: string;
-    firstName?: string;
-    secondName?: string;
+    body?: string;
 }

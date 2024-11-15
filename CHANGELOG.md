@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.1.0 ( Mega init )
+
+### Added
+
+- Components
+- Functions
+- Meta & title support
+- If
+- Orders and 'strict' mode order `@strict`
+- Imports
+- Export the web with `out/w`
+
+### Featured
+
+- New CLI running
+- Project running ( new system )
+- Project creating ( with ocm )
+- Continue the structured sources
+
+## Fixed
+
+- Bug with the CLI test & dev running
+
 ## 0.8.0 ( Performance & Bug Fixing )
 
 ### Added

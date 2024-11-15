@@ -1,6 +1,6 @@
 {
   "name": "ocat-lang",
-  "version": "0.8.0",
+  "version": "1.1.0",
   "description": "A programming language for the web design and development",
   "homepage": "https://orangecatprog.com",
   "readme": "README.md",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/luisRG-L/ocat-lang-npm.git"
+    "url": "git+https://github.com/luisRG-L/ocat-lang-npm.git"
   },
   "bugs": {
     "url": "https://github.com/luisRG-L/ocat-lang-npm/issues"
@@ -51,13 +51,15 @@
     "npm": ">=6.0.0"
   },
   "bin": {
-    "ocat": "./dist/main.js"
+    "ocat": "dist/main.js",
+    "ocm": "dist/bin/ocm.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",
     "@types/express": "^5.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.7.4",
+    "@types/yargs": "^17.0.33",
     "eslint": "^9.12.0",
     "globals": "^15.10.0",
     "ts-node": "^10.9.2",
@@ -67,7 +69,8 @@
   "dependencies": {
     "express": "^4.21.1",
     "fs-extra": "^11.2.0",
-    "ocat-lang": "file:"
+    "ocat-lang": "file:",
+    "yargs": "^17.7.2"
   },
   "markdown": "github",
   "publishConfig": {
