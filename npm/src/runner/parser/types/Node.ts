@@ -18,6 +18,7 @@ export enum NodeType {
     FCall,
     Create,
     UseStrict,
+    Layout,
 }
 
 export interface Node {

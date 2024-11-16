@@ -278,6 +278,20 @@ export const parse = (tokensK: Token[]): Node[] => {
                     }
                     break;
 
+                case TokenType.Layout:
+                    node.type = NodeType.Layout;
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.PageRequest) {
+                        throw new OSyntaxError(
+                            `Expected page request after 'layout', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    nextToken();
+                    const tag = collectTag().join(' ');
+                    node.params = { content: tag };
+                    break;
+
                 default:
                     throw new OSyntaxError(
                         `Unexpected token: ${token.value} (Type: ${token.type})`

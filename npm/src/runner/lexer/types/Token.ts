@@ -24,6 +24,7 @@ export enum TokenType {
     Block = "Block",
     SCS = "Source Control Sentence",
     ORDER = "ORDER",
+    Layout = "Layout",
 }
 
 export interface Token {

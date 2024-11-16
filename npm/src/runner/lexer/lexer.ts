@@ -64,6 +64,8 @@ export const tokenize = (input: string): Token[] => {
                 token.type = TokenType.IERQ;
             } else if (word === "component") {
                 token.type = TokenType.Component;
+            } else if (word === 'layout') {
+                token.type = TokenType.Layout;
             } else {
                 token.type = TokenType.Identifier;
             }

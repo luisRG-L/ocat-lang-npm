@@ -26,6 +26,7 @@ export const run = (nodes: Node[]): Memory => {
     let head =
         '<meta charset="UTF-8" /><meta name="Generator" content="Orange Cat" />';
     let lastConditionValue: boolean = false;
+    let title: string, description: string, layout: string;
 
     nodes.forEach((node) => {
         const display = (err: any) => {
@@ -84,7 +85,12 @@ export const run = (nodes: Node[]): Memory => {
                 case NodeType.SHOW:
                     const route = "/" + (node.params.route ?? `404/${++index}`);
                     const processedHTMLContent = processHTML(
-                        node.params.content
+                        processLayout(
+                            layout,
+                            title, 
+                            description, 
+                            node.params.content ?? ''
+                        )
                     );
                     const processedContent = `
     <head>${head}</head>
@@ -157,9 +163,13 @@ export const run = (nodes: Node[]): Memory => {
                         switch (type.replace(/\\/g, "")) {
                             case "title":
                                 head += `<title>${content}</title>`;
+                                title = content;
                                 break;
                         }
                     } else {
+                        if (type === "description") {
+                            description = content;
+                        }
                         head += `<meta name="${type}" content="${content}" />`;
                     }
                     break;
@@ -194,6 +204,11 @@ export const run = (nodes: Node[]): Memory => {
                     } else if (dtype === "folder" || dtype === "dir") {
                         fs.mkdirSync(dname ?? "./.ocat");
                     }
+                    break;
+
+                case NodeType.Layout:
+                    const tag = node.params.content;
+                    layout = processHTML(tag);
                     break;
             }
         } catch (e) {
@@ -290,3 +305,21 @@ const processHTML = (html?: string): string => {
                 ).value.toString() ?? `onotdefined`
         );
 };
+
+const processLayout = (layout: string, title: string, description: string, children: string): string => {
+    const useRegex = /\{\*\s*(\w+)\s*\*\}/g;
+
+    return layout
+        .replace(useRegex, (_match, name) => {
+            switch (name) {
+                case "title":
+                    return title;
+                case "description":
+                    return description;
+                case "children":
+                    return children;
+                default:
+                    return 'onotdefined';
+            }
+        });
+}
