@@ -1,4 +1,4 @@
-import { Node, NodeType } from "./types";
+import { Node, NodeType, RestMode } from "./types";
 import { Token, TokenType } from "../lexer";
 import { CustomError, OSyntaxError, Warning } from "../../error";
 import { NodeAdapter } from "../../adapters";
@@ -81,7 +81,7 @@ export const parse = (tokensK: Token[]): Node[] => {
                     nextToken();
                     const tags = collectTag();
                     const joinedTags = tags
-                        .map((tag) => tag.trim())
+                        //.map((tag) => tag.trim())
                         .join(" ")
                         .trim();
 
@@ -389,3 +389,24 @@ const sanitizeTokenValue = (value: string): string => {
         .replace("%", " ");
 };
 function skipComment() {}
+
+function collectObject(): string {
+    let token = getToken();
+    let str: string = "";
+    let iteration = 1;
+
+    while (iteration !== 0) {
+        if (token.type === TokenType.Block) {
+            if (token.value === "{") {
+                iteration++;
+            } else if (token.value === "}") {
+                iteration--;
+            }
+        }
+        str += token.value + " ";
+        nextToken();
+        token = getToken();
+    }
+
+    return str.trim();
+}

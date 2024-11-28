@@ -1,3 +1,5 @@
+import { RestMode } from "./Backend";
+
 export interface Param {
     content?: string;
     cause?: string;
@@ -8,6 +10,8 @@ export interface Param {
     valueContent?: string;
     condition?: Condition;
     route?: string;
+    mode?: RestMode;
+    url?: string;
 }
 
 export interface Condition {

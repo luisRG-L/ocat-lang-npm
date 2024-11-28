@@ -61,4 +61,5 @@ yargs
         () => run()
     )
     .help()
+    .alias("version", "v")
     .alias("help", "h").argv;

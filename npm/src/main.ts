@@ -30,4 +30,5 @@ yargs
     )
     .demandCommand(1, "You need to provide a command")
     .help()
+    .alias('version', 'v')
     .alias("help", "h").argv;
