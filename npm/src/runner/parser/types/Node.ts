@@ -19,6 +19,7 @@ export enum NodeType {
     Create,
     UseStrict,
     Layout,
+    RestI,
 }
 
 export interface Node {

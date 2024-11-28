@@ -1,4 +1,4 @@
-import { Node, NodeType } from "./parser/types";
+import { Node, NodeType, RestMode } from "./parser/types";
 import { CustomError, ErrorType, Warning } from "../error";
 import { Memory, Function } from "../memory/";
 import { print } from "../print/";
@@ -26,7 +26,7 @@ export const run = (nodes: Node[]): Memory => {
     let head =
         '<meta charset="UTF-8" /><meta name="Generator" content="Orange Cat" />';
     let lastConditionValue: boolean = false;
-    let title: string, description: string, layout: string;
+    let title: string = '', description: string = '', layout: string = '';
 
     nodes.forEach((node) => {
         const display = (err: any) => {
@@ -214,20 +214,20 @@ export const run = (nodes: Node[]): Memory => {
         } catch (e) {
             if (e instanceof Warning || e instanceof CustomError) {
                 e.display(node.line);
+            } else {
+                console.log("INTERNAL ERROR");
             }
         }
     });
-    if (usePort) {
-        routes.forEach((route) => {
-            app.get(route.name, (req, res) => {
-                res.send(`<style>${styles}</style>${route.content}`);
-            });
+    routes.forEach((route) => {
+        app.get(route.name, (req, res) => {
+            res.send(`<style>${styles}</style>${route.content}`);
         });
-        app.listen(config.port, () => {
-            console.log(`Server running at http://localhost:${config.port}/`);
-            console.log(`Quit the server with (CTRL or CMD) + C`);
-        });
-    }
+    });
+    app.listen(config.port, () => {
+        console.log(`Server running at http://localhost:${config.port}/`);
+        console.log(`Quit the server with (CTRL or CMD) + C`);
+    });
     return memory;
 };
 
@@ -309,7 +309,13 @@ const processHTML = (html?: string): string => {
 const processLayout = (layout: string, title: string, description: string, children: string): string => {
     const useRegex = /\{\*\s*(\w+)\s*\*\}/g;
 
-    return layout
+    let layoutx = layout;
+
+    if (layoutx.length === 0) {
+        layoutx = `<div>${children}</div>`;
+    }
+
+    return layoutx
         .replace(useRegex, (_match, name) => {
             switch (name) {
                 case "title":

@@ -66,6 +66,8 @@ export const tokenize = (input: string): Token[] => {
                 token.type = TokenType.Component;
             } else if (word === 'layout') {
                 token.type = TokenType.Layout;
+            } else if (word === 'rest') {
+                token.type = TokenType.RestI;
             } else {
                 token.type = TokenType.Identifier;
             }
