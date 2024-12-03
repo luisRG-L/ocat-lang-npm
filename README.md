@@ -38,11 +38,7 @@ ocat [command] <path/to/your/file.ocat>
 
 ## Docs
 
-> [!NOTE]
-> This documentation is not complete.
-
-[Example programs](./docs/examples.md)
-[Orange Cat terms](./docs/terms.md)
+[See the documentation](./docs/latest.md)
 
 ## License
 
@@ -62,20 +58,7 @@ Email: <info@orangecatprog.com>
 > [!WARNING]
 > Orange Cat is still in development
 
-## Last version features
 
-The last version of Orange Cat was 0.8.0
-
-### Added
-
-- global css
-- structured sources
-
-### Fixed
-
-- Bug with the print statement
-- Bug with the import statement
-- Scripting in PageRequests
 
 ## The version system
 
