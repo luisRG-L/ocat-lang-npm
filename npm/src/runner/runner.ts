@@ -3,26 +3,38 @@ import { CustomError, ErrorType, Warning } from "../error";
 import { Memory, Function } from "../memory/";
 import { print } from "../print/";
 import express from "express";
-import * as fs from "fs";
 import path from "path";
 import { init, rund } from "../lang";
 import { exec } from "child_process";
-import { getValue } from "./utils";
+import { getValue, readFile } from "./utils";
+import { Route } from "./types/Route";
+import * as fs from "fs";
 
-const configPath = path.resolve(__dirname, "../../json/config.json");
-const data = fs.readFileSync(configPath, "utf8");
-const config = JSON.parse(data);
+const configFile = '../../json/config.json';
+const cssFile = '../../assets/style.css';
+const jsFile = '../../assets/ocat.js';
+
+const autoCssFile = './css/style.css';
+const autoJsFile = './assets/ocat.js';
+
+const configPath = path.resolve(__dirname, configFile);
+const cssPath = path.resolve(__dirname, cssFile);
+const jsPath = path.resolve(__dirname, jsFile);
+
+const data = readFile(configPath);
+const preStyles = (readFile(autoCssFile, true) ?? readFile(cssPath, true)) ?? '';
+const preJs = (readFile(autoJsFile) ?? readFile(jsPath)) ?? '';
+
+const config = JSON.parse(data ?? '{"port": 8080}');
 
 const memory: Memory = new Memory();
 
 const app = express();
 
 export const run = (nodes: Node[]): Memory => {
-    // Local variables
-    let routes: { name: string; content: string }[] = [];
+    let routes: Route[] = [];
     let index = 0;
-    let usePort = false;
-    let styles = "body{margin:0;padding:0;}";
+    let styles = preStyles;
     let head =
         '<meta charset="UTF-8" /><meta name="Generator" content="Orange Cat" />';
     let lastConditionValue: boolean = false;
@@ -97,7 +109,6 @@ export const run = (nodes: Node[]): Memory => {
     <body>${processedHTMLContent}</body>
     `;
                     routes.push({ name: route, content: processedContent });
-                    usePort = true;
                     break;
 
                 case NodeType.EXPORTW:
@@ -145,6 +156,10 @@ export const run = (nodes: Node[]): Memory => {
 
                 case NodeType.UseStrict:
                     memory.setStrict();
+                    break;
+
+                case NodeType.ORDER:
+                    memory.setOrder(node.params.name, node.params.content);
                     break;
 
                 case NodeType.CDECLARE:
@@ -210,6 +225,22 @@ export const run = (nodes: Node[]): Memory => {
                     const tag = node.params.content;
                     layout = processHTML(tag);
                     break;
+            
+                case NodeType.LOAD:
+                    const _type = node.params.type ?? '';
+                    const _route = node.params.route ?? '';
+                    const pathName = _route.split('/').pop();
+                    const readed = readFile(_route + `/${pathName}.component.html`) ?? '';
+                    const cssReaded = readFile(_route + `/${pathName}.component.css`) ?? '';
+                    const name = (readed.match(/<title>\w+<\/title>/g) ?? ['udef'])[0].replace('<title>', '').replace('</title>', '');
+                    if (_type === "component") {
+                        const prcontent = readed.split(/\n/g).splice(1).join('\n');
+                        const joinedContent = prcontent + `<style>${processCSS(cssReaded, name)}</style>`;
+                        memory.declareComponent(name, joinedContent);
+                    } else if (_type === "layout") {
+                        layout = processHTML(readed);
+                    }
+                    break;
             }
         } catch (e) {
             if (e instanceof Warning || e instanceof CustomError) {
@@ -219,17 +250,29 @@ export const run = (nodes: Node[]): Memory => {
             }
         }
     });
-    routes.forEach((route) => {
-        app.get(route.name, (req, res) => {
-            res.send(`<style>${styles}</style>${route.content}`);
+    if (routes.length !== 0) {
+        routes.forEach((route) => {
+            app.get(route.name, (req, res) => {
+                res.send(processRoute(route.content, route.name, routes, styles));
+            });
         });
-    });
-    app.listen(config.port, () => {
-        console.log(`Server running at http://localhost:${config.port}/`);
-        console.log(`Quit the server with (CTRL or CMD) + C`);
-    });
+        try {
+            app.listen(config.port, () => {
+                console.log(`Server running at http://localhost:${config.port}/`);
+                console.log(`Quit the server with (CTRL or CMD) + C`);
+            });
+        } catch (e) {
+            console.log("The port is already in use");
+        }
+    }
     return memory;
 };
+
+const processRoute = (content: string, route: string, routes: Route[], styles: string): string => {
+    const DEVBAR = `<div class="--ocat-dev-var-tool"><oc-c>You are using the development mode</oc-c></div>`
+    const useDev = memory.getOrder("mode") || memory.getOrder("dev");
+    return `<style>${styles}</style><script type="module">${preJs}</script>${content}${useDev ? DEVBAR : ''}`
+}
 
 const commanditeCond = (condition: string): boolean => {
     const args_ = condition.split("\\s+");
@@ -295,7 +338,7 @@ const processHTML = (html?: string): string => {
         .replace(
             componentRegex,
             (_match, componentName) =>
-                memory.getComponent(componentName) ?? `<p>${config.CNFE}</p>`
+                `<div class="oc-component-${componentName}">${memory.getComponent(componentName) ?? `<p>${config.CNFE}</p>`}</div>`
         )
         .replace(
             innerRegex,
@@ -303,7 +346,9 @@ const processHTML = (html?: string): string => {
                 (
                     memory.getVar(inner) ?? { value: "onotdefined" }
                 ).value.toString() ?? `onotdefined`
-        );
+        )
+        .replace(/undefined/g, '')
+        ;
 };
 
 const processLayout = (layout: string, title: string, description: string, children: string): string => {
@@ -329,3 +374,7 @@ const processLayout = (layout: string, title: string, description: string, child
             }
         });
 }
+
+const processCSS = (css: string, cname: string) => {
+    return css.replace(/V  local/g, `.oc-component-${cname} `);
+};

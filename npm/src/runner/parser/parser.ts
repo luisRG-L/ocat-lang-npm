@@ -196,8 +196,6 @@ export const parse = (tokensK: Token[]): Node[] => {
 
                             node.params.condition.cond = params;
                             node.params.condition.body = collectBlock();
-                            nextToken();
-                            token = getToken();
                             break;
                     }
                     break;
@@ -242,6 +240,23 @@ export const parse = (tokensK: Token[]): Node[] => {
                     const orderName = token.value.replace("@", "");
                     if (orderName === "strict") {
                         node.type = NodeType.UseStrict;
+                    } else {
+                        node.type = NodeType.ORDER;
+                        nextToken();
+                        token = getToken();
+                        node.params.name = orderName;
+                        if (token.type !== TokenType.Shape) {
+                            node.params.content = 'true';
+                            currentIndex --;
+                            break;
+                        }
+                        
+                        nextToken();
+                        token = getToken();
+                        const params = token.value;
+                        nextToken();
+                        token = getToken();
+                        node.params.content = params;
                     }
                     break;
 
@@ -291,6 +306,29 @@ export const parse = (tokensK: Token[]): Node[] => {
                     const tag = collectTag().join(' ');
                     node.params = { content: tag };
                     break;
+
+                case TokenType.Load:
+                    node.type = NodeType.LOAD;
+                    let _type = '';
+                    switch (token.value) {
+                        case 'loadComponent':
+                            _type = 'component';
+                            break;
+                        case 'loadLayout':
+                            _type = 'layout';
+                            break;
+                    }
+                    nextToken();
+                    token = getToken();
+                    if (token.type !== TokenType.Value) {
+                        throw new OSyntaxError(
+                            `Expected string after 'load', but got: ${token.value} (Type: ${token.type})`
+                        );
+                    }
+                    const path = sanitizeTokenValue(collectString());
+                    node.params = { route: path, type: _type };
+                    break;
+
 
                 default:
                     throw new OSyntaxError(

@@ -3,10 +3,12 @@ import { Variable, Component, Function } from "./types/";
 import { _Object } from "./classes";
 
 export class Memory {
+    
     private variables: Map<string, Variable> = new Map();
     private components: Map<string, Component> = new Map();
     private functions: Map<string, Function> = new Map();
     private objects: Map<string, _Object> = new Map();
+    private orders: Map<string, string> = new Map();
 
     private strict: boolean = false;
 
@@ -18,6 +20,18 @@ export class Memory {
 
     public setStrict() {
         this.strict = true;
+    }
+
+    setOrder(name: string | undefined, content: string | undefined) {
+        if (name && content) {
+            this.orders.set(name, content);
+        }
+    }
+
+    getOrder(name: string | undefined) {
+        if (name) {
+            return this.orders.get(name);
+        }
     }
 
     public copyFrom(memory: Memory) {

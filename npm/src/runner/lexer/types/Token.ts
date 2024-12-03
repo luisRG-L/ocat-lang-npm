@@ -25,7 +25,8 @@ export enum TokenType {
     SCS = "Source Control Sentence",
     ORDER = "ORDER",
     Layout = "Layout",
-    RestI = "RestI"
+    RestI = "RestI",
+    Load = "Load",
 }
 
 export interface Token {

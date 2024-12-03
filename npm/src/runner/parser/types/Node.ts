@@ -20,6 +20,8 @@ export enum NodeType {
     UseStrict,
     Layout,
     RestI,
+    ORDER,
+    LOAD,
 }
 
 export interface Node {
