@@ -1,0 +1,79 @@
+{
+  "name": "ocat-lang",
+  "version": "1.1.4",
+  "description": "A programming language for the web design and development",
+  "homepage": "https://orangecatprog.com",
+  "readme": "README.md",
+  "author": "LuisRG-L, Orange Cat <info@orangecatprog.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luisRG-L/ocat-lang-npm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/luisRG-L/ocat-lang-npm/issues"
+  },
+  "keywords": [
+    "ocat",
+    "orangecat",
+    "programming",
+    "language",
+    "lang",
+    "compiler",
+    "interpreter",
+    "simple",
+    "frontend",
+    "backend",
+    "front-end",
+    "back-end",
+    "ux",
+    "ui",
+    "developers",
+    "cat",
+    "orange"
+  ],
+  "eslintConfig": {
+    "ignorePatterns": [
+      "dist/"
+    ],
+    "env": {
+      "node": true
+    }
+  },
+  "main": "out/main.js",
+  "scripts": {
+    "test": "tsc && ocat test/main.ocat",
+    "build": "tsc && npm link",
+		"try": "tsc && ocat --test test/main.ocat"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "bin": {
+    "ocat": "dist/main.js",
+    "ocm": "dist/bin/ocm.js"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.7.4",
+    "@types/yargs": "^17.0.33",
+    "eslint": "^9.12.0",
+    "globals": "^15.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.8.0"
+  },
+  "dependencies": {
+    "esbuild": "^0.24.0",
+    "express": "^4.21.1",
+    "fs-extra": "^11.2.0",
+    "ocat-lang": "file:",
+    "yargs": "^17.7.2"
+  },
+  "markdown": "github",
+  "publishConfig": {
+    "access": "public"
+  }
+}

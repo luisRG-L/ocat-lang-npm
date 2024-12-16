@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.--ocat-dev-var-tool {
+    position: fixed;
+    display: flex;
+    bottom: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.oc-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+#--ocat-dev-var-tool-button {
+	border: none;
+	padding: 10px 10px;
+	min-width: 50px;
+	min-height: 50px;
+	cursor: pointer;
+	border-radius: 50%;
+	font-size: 20px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+	transition: all 0.3s ease;
+	outline: none;
+	position: fixed;
+	left: 10px;
+	bottom: 10px;
+}
+
+#--ocat-dev-var-tool-button:hover {
+	transform: scale(1.1);
+}
+
+.cc, .--ocat-dev-var-tool {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	position: fixed;
+}
+
+#--ocat-dev-var-tool-container {
+	background-color: #CCC;
+	border-radius: 10px;
+	padding: 10px;
+	border: 0;
+}
+
+input {
+	border: 0;
+	outline: 0;
+	background-color: #B0B0B0;
+	border-radius: 10px;
+	padding: 10px;
+}
+
+.occ {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 10px;
+}

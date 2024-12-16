@@ -1,0 +1,5 @@
+*.ocat linguist-language=OrangeCat
+*.oc linguist-language=OrangeCat
+
+*.ocat linguist-detectable
+*.oc linguist-detectable
