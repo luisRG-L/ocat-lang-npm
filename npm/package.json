@@ -43,7 +43,8 @@
   "main": "out/main.js",
   "scripts": {
     "test": "tsc && ocat test/main.ocat",
-    "build": "tsc && npm link",
+    "build": "tsc",
+		"dev": "tsc && npm link && ocat --dev test/main.ocat",
 		"try": "tsc && ocat --test test/main.ocat"
   },
   "engines": {

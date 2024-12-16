@@ -13,5 +13,6 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
+      - run: cd npm
       - run: npm install
       - run: npm run build --if-present
