@@ -1,22 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 Not Found</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>404 Not Found</title>
+	<style>
+		body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+		.container { text-align: center; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+		h1 { font-size: 3rem; color: #ff6f61; }
+		p { font-size: 1rem; color: #333; }
+		ol { text-align: left; margin: 1rem 0; padding-left: 1.5rem; }
+		li { margin-bottom: 0.5rem; }
+		code { background: #e0e0e0; padding: 0.2rem 0.4rem; border-radius: 4px; }
+	</style>
 </head>
 <body>
-    <h1>404 Not Found</h1>
-	<p>You can modify the 404 page in the <code>templates/404.html</code> file if you are in a project.</p>
-	<p>This route is not founded by the Orange Cat Path Router.</p>
-	<h2>Fix the problem</h2>
-	<ol>
-		<li>Check if the route is correct.</li>
-		<li>Check the source code of the route.</li>
-		<li>Check if the route is in the <code>routes</code> section.</li>
-	</ol>
-	<h2>Routes</h2>
-	{*routes*}
+	<div class="container">
+		<h1>404 Not Found</h1>
+		<p>You can modify the 404 page in the <code>templates/404.html</code> file if you are in a project.</p>
+		<p>This route is not found by the Orange Cat Path Router.</p>
+		<h2>Fix the problem</h2>
+		<ol>
+			<li>Check if the route is correct.</li>
+			<li>Check the source code of the route.</li>
+			<li>Check if the route is in the <code>routes</code> section.</li>
+		</ol>
+		<h2>Routes</h2>
+		{*routes*}
+	</div>
 </body>
 </html>

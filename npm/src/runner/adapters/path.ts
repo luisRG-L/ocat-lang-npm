@@ -1,21 +1,35 @@
 import path from "path";
 import { readFileWP } from "../utils/readFile";
 
-export const processPath = (wppath: string): string => {
-    const rules = readFileWP(path.join(__dirname, "../../../../../config/path.json")) ?? readFileWP('./.ocat/ocat.json');
-    if (rules) {
-        const json = JSON.parse(rules);
-        let ppath = wppath;
-        for (const key in json) {
-            if (json[key].includes("${projectRoot}")) {
-                json[key] = json[key].replace("${projectRoot}", process.cwd());
-            }
-            if (json[key].includes("${projectName}")) {
-                json[key] = json[key].replace("${projectName}", process.cwd().split("/").pop());
-            }
-            ppath = ppath.replace(key, json[key]);
-        }
-        return ppath;
+interface PathRules {
+    [key: string]: string;
+}
+
+const loadPathRules = (): PathRules | null => {
+    const configPath = path.join(__dirname, "../../../../../config/path.json");
+    const fallbackPath = './.ocat/ocat.json';
+    const rules = readFileWP(configPath) ?? readFileWP(fallbackPath);
+    return rules ? JSON.parse(rules) : null;
+};
+
+const replacePlaceholders = (value: string): string => {
+    const projectRoot = process.cwd();
+    const projectName = projectRoot.split("/").pop() || "";
+    return value
+        .replace("${projectRoot}", projectRoot)
+        .replace("${projectName}", projectName);
+};
+
+const applyPathRules = (wppath: string, rules: PathRules): string => {
+    let ppath = wppath;
+    for (const key in rules) {
+        const replacedValue = replacePlaceholders(rules[key]);
+        ppath = ppath.replace(key, replacedValue);
     }
-    return wppath;
+    return ppath;
+};
+
+export const processPath = (wppath: string): string => {
+    const rules = loadPathRules();
+    return rules ? applyPathRules(wppath, rules) : wppath;
 };

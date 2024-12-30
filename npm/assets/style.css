@@ -1,34 +1,36 @@
 body {
-    margin: 0;
-    padding: 0;
+	margin: 0;
+	padding: 0;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.--ocat-dev-var-tool {
-    position: fixed;
-    display: flex;
-    bottom: 0;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
+.--ocat-dev-var-tool, .cc {
+	position: fixed;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
 }
 
 .oc-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 #--ocat-dev-var-tool-button {
 	border: none;
-	padding: 10px 10px;
+	padding: 10px;
 	min-width: 50px;
 	min-height: 50px;
 	cursor: pointer;
 	border-radius: 50%;
 	font-size: 20px;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-	transition: all 0.3s ease;
+	transition: transform 0.3s ease;
 	outline: none;
 	position: fixed;
 	left: 10px;
@@ -39,27 +41,16 @@ body {
 	transform: scale(1.1);
 }
 
-.cc, .--ocat-dev-var-tool {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100%;
-	position: fixed;
-}
-
 #--ocat-dev-var-tool-container {
 	background-color: #CCC;
 	border-radius: 10px;
 	padding: 10px;
-	border: 0;
+	border: none;
 }
 
 input {
-	border: 0;
-	outline: 0;
+	border: none;
+	outline: none;
 	background-color: #B0B0B0;
 	border-radius: 10px;
 	padding: 10px;

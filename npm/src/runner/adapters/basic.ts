@@ -1,29 +1,16 @@
 import { defhead, generator } from "../constants";
 
-export const processBasic = (html: string, config: BasicConfig): string => {
-    return processBasicWC(html)
-        .replace(/{\*routes\*}/g, config.routeTemplate)
-    ;
-};
+export const processBasic = (html: string, config: BasicConfig): string => 
+    processBasicWC(html).replace(/{\*routes\*}/g, config.routeTemplate);
 
-export function processBasicWC (html: string) {
-    const getterRegExp = /\{\s*(\w+)([^}]*)\s*\}/g;
-
-    return html
-        .replace(getterRegExp, (_match, getter) => {
-            let result = '';
-            switch (getter) {
-                case 'generator':
-                    result = generator;
-                    break;
-
-                case 'head':
-                    result = defhead;
-                    break;
-            }
-            return result;
-        })
-}
+export const processBasicWC = (html: string, ): string => 
+    html.replace(/\{\s*(\w+)([^}]*)\s*\}/g, (_match, getter) => {
+        switch (getter) {
+            case 'generator': return generator;
+            case 'head': return defhead;
+            default: return '';
+        }
+    });
 
 export interface BasicConfig {
     routeTemplate: string;

@@ -1,12 +1,26 @@
 import { Route } from "../types";
+import { View } from "./view";
 
 export const processRouteTemplate = (
     html: string,
-    routes: Route[]
+    routes: Route[],
+    views: View[]
 ): string => {
-    return routes.map(({name, content}) => {
-        return (html ?? `<div>{*name*}</div>`)
+    return `
+<h3>From Routes: </h3>
+${routes
+    .map(({ name, content }) =>
+        (html ?? `<div>{*name*}</div>`)
             .replace(/{\*name\*}/g, name)
-            .replace(/{\*content\*}/g, content);
-    }).join("") ?? '';
+            .replace(/{\*content\*}/g, content)
+    )
+    .join("")}
+<h3>From Views: </h3>
+${views
+    .map(({ name, content }) =>
+        (html ?? `<div>{*name*}</div>`)
+            .replace(/{\*name\*}/g, name)
+            .replace(/{\*content\*}/g, content)
+    )
+    .join("")}`;
 };

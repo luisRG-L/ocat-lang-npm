@@ -1,16 +1,15 @@
 import { CustomError, ErrorType, Warning } from "../error";
-import { Variable, Component, Function } from "./types/";
+import { Variable, Component, Function, UtilMap, DCollection } from "./types/";
 import { _Object } from "./classes";
 
 export class Memory {
-    
-    private variables: Map<string, Variable> = new Map();
-    private components: Map<string, Component> = new Map();
-    private functions: Map<string, Function> = new Map();
-    private objects: Map<string, _Object> = new Map();
-    private orders: Map<string, string> = new Map();
-    private templates: Map<string, string> = new Map();
-    private collections: Map<string, object> = new Map();
+    private variables: UtilMap<Variable> = new Map();
+    private components: UtilMap<Component> = new Map();
+    private functions: UtilMap<Function> = new Map();
+    private objects: UtilMap<_Object> = new Map();
+    private orders: UtilMap<string> = new Map();
+    private templates: UtilMap<string> = new Map();
+    private collections: UtilMap<DCollection[]> = new Map();
     private properties: string[] = [];
 
     private strict: boolean = false;
@@ -37,15 +36,15 @@ export class Memory {
 
     public setOrder(name: string | undefined, content: string | undefined) {
         if (name && content) {
-            if (name === 'Set') {
-                this.orders.set(this.orders.get('Def') ?? '', content);
-                this.orders.delete('Def');
+            if (name === "Set") {
+                this.orders.set(this.orders.get("Def") ?? "", content);
+                this.orders.delete("Def");
                 this.addProperty(name);
             }
             this.orders.set(name, content);
         } else {
             if (name) {
-                this.orders.set(name, 'true');
+                this.orders.set(name, "true");
             }
         }
     }
@@ -206,7 +205,7 @@ export class Memory {
     }
 
     // Templates
-    public declareTemplate (name: string, value: string) {
+    public declareTemplate(name: string, value: string) {
         this.templates.set(name, value);
     }
 
@@ -218,12 +217,13 @@ export class Memory {
         return this.templates;
     }
 
-    public declareCollection(name: string, value: object) {
+    // Collections
+    public declareCollection(name: string, value: DCollection[]) {
         this.collections.set(name, value);
     }
 
-    public getCollection(name: string): {[key: string]: string} | undefined {
-        return this.collections.get(name) as {[key: string]: string};
+    public getCollection(name: string) {
+        return this.collections.get(name);
     }
 
     public get getCollections() {

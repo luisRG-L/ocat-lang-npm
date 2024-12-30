@@ -1,5 +1,5 @@
 import { CustomError, ErrorType, Warning } from "../error";
-import { Memory, Function } from "../memory/";
+import { Memory, Function, DCollection } from "../memory/";
 import { print } from "../print/";
 import { init, rund } from "../lang";
 
@@ -7,7 +7,14 @@ import { Node, NodeType } from "./parser";
 
 import { getValue, readFile } from "./utils";
 import { Route } from "./types";
-import { process404, processCSS, processHTML, processLayout, processRoute, processRouteTemplate } from "./adapters";
+import {
+    process404,
+    processCSS,
+    processHTML,
+    processLayout,
+    processRoute,
+    processRouteTemplate,
+} from "./adapters";
 
 import express from "express";
 import path from "path";
@@ -23,6 +30,7 @@ import {
     globalStyles,
     defhead,
 } from "./constants";
+import { View, viewAdapt, viewAdapter } from "./adapters/view";
 
 const memory: Memory = new Memory();
 
@@ -30,25 +38,65 @@ const app = express();
 
 export const save = () => {
     const properties = config.properties;
-    Object.entries(properties.defined).forEach((object) => {
-        const [key, value] = object;
-        memory.setOrder(key, value as string);
-        memory.addProperty(key);
-    });
+
+    if (!properties) {
+        console.log("No properties provided");
+        return;
+    }
 
     properties.provided.forEach((key: string) => {
         memory.addProperty(key);
     });
-}
+
+    Object.entries(properties.defined).forEach(([name, value]) => {
+        memory.addProperty(name);
+        memory.setOrder(name, value as string);
+    });
+
+    Object.entries(config.collections).forEach(([name, value]) => {
+        const folder = path.join("./collections", value as string);
+        if (fs.existsSync(folder)) {
+            const collectionItems: DCollection[] = [];
+            const items = fs.readdirSync(folder, { withFileTypes: true });
+            const files = items.filter((item) => item.isFile());
+            files.forEach((file) => {
+                const name = file.name;
+                const params: { [key: string]: string } = {};
+                const content = fs
+                    .readFileSync(path.join(folder, name), "utf8")
+                    .replace(
+                        /---\s+(.*?)\s+---/gs,
+                        (_match: string, paramContent: string) => {
+                            const paramMatch = /(.*?)="(.*?)"/gs;
+                            const matchs = paramContent.match(paramMatch);
+                            matchs?.forEach(([match, key, valuex]) => {
+                                params[key] = valuex;
+                            });
+                            return "";
+                        }
+                    );
+                collectionItems.push({
+                    content,
+                    params,
+                    title: name,
+                });
+            });
+            memory.declareCollection(name, collectionItems);
+        }
+    });
+};
 
 export const run = (nodes: Node[]): Memory => {
     save();
-    let routes: Route[] = [];
+    const routes: Route[] = [];
+    const views: View[] = [];
     let index = 0;
     let styles = preStyles + globalStyles;
     let head = defhead;
     let lastConditionValue: boolean = false;
-    let title: string = '', description: string = '', layout: string = '';
+    let title: string = "",
+        description: string = "",
+        layout: string = "";
 
     nodes.forEach((node) => {
         const display = (err: any) => {
@@ -110,10 +158,10 @@ export const run = (nodes: Node[]): Memory => {
                         memory,
                         processLayout(
                             layout,
-                            title, 
-                            description, 
-                            node.params.content ?? ''
-                        ),
+                            title,
+                            description,
+                            node.params.content ?? ""
+                        )
                     );
                     const processedContent = `
     <head>${head}</head>
@@ -123,32 +171,7 @@ export const run = (nodes: Node[]): Memory => {
                     break;
 
                 case NodeType.EXPORTW:
-                    if (fs.existsSync("./out"))
-                        fs.rmSync("./out", { recursive: true });
-                    fs.mkdirSync("./out");
-                    fs.mkdirSync("./out/css");
-                    fs.writeFileSync("./out/css/style.css", styles);
-
-                    routes.forEach((route) => {
-                        const routePath =
-                            route.name === "/"
-                                ? "./out/index.html"
-                                : `./out/${route.name.replace(
-                                      /^\//,
-                                      ""
-                                  )}/index.html`;
-                        const dir = path.dirname(routePath);
-                        fs.mkdirSync(dir, { recursive: true });
-                        const cssPath =
-                            route.name === "/"
-                                ? "./css/style.css"
-                                : "../".repeat(
-                                      route.name.split("/").length - 1
-                                  ) + "css/style.css";
-                        const contentWithCSS = `<link href="${cssPath}" rel="stylesheet" />${route.content}`;
-
-                        fs.writeFileSync(routePath, contentWithCSS);
-                    });
+                    memory.setOrder("export", "true");
                     break;
 
                 case NodeType.STYLE:
@@ -176,7 +199,7 @@ export const run = (nodes: Node[]): Memory => {
                 case NodeType.CDECLARE:
                     memory.declareComponent(
                         node.params.name,
-                        processHTML(memory, node.params.content ?? '')
+                        processHTML(memory, node.params.content ?? "")
                     );
                     break;
 
@@ -234,19 +257,30 @@ export const run = (nodes: Node[]): Memory => {
 
                 case NodeType.Layout:
                     const tag = node.params.content;
-                    layout = processHTML(memory, tag ?? '');
+                    layout = processHTML(memory, tag ?? "");
                     break;
-            
+
                 case NodeType.LOAD:
-                    const _type = node.params.type ?? '';
-                    const _route = node.params.route ?? '';
-                    const pathName = _route.split('/').pop();
-                    const readed = readFile(_route + `/${pathName}.component.html`) ?? '';
-                    const cssReaded = readFile(_route + `/${pathName}.component.css`) ?? '';
-                    const name = (readed.match(/<title>\w+<\/title>/g) ?? ['udef'])[0].replace('<title>', '').replace('</title>', '');
+                    const _type = node.params.type ?? "";
+                    const _route = node.params.route ?? "";
+                    const pathName = _route.split("/").pop();
+                    const readed =
+                        readFile(_route + `/${pathName}.component.html`) ?? "";
+                    const cssReaded =
+                        readFile(_route + `/${pathName}.component.css`) ?? "";
+                    const name = (readed.match(/<title>\w+<\/title>/g) ?? [
+                        "udef",
+                    ])[0]
+                        .replace("<title>", "")
+                        .replace("</title>", "");
                     if (_type === "component" || _type === "template") {
-                        const prcontent = readed.split(/\n/g).splice(1).join('\n');
-                        const joinedContent = prcontent + `<style>${processCSS(cssReaded, name)}</style>`;
+                        const prcontent = readed
+                            .split(/\n/g)
+                            .splice(1)
+                            .join("\n");
+                        const joinedContent =
+                            prcontent +
+                            `<style>${processCSS(cssReaded, name)}</style>`;
                         if (_type === "component") {
                             memory.declareComponent(name, joinedContent);
                         } else {
@@ -265,24 +299,110 @@ export const run = (nodes: Node[]): Memory => {
             }
         }
     });
-    if (routes.length !== 0) {
-        const routeTemplate = processRouteTemplate(codeRouteTemplate, routes);
+    if (
+        routes.length !== 0 ||
+        config.views ||
+        memory.getOrder("export") === "true" ||
+        memory.getOrder("web")
+    ) {
+        if (config.views) {
+            const viewsFolder = "./views/";
+            if (!fs.existsSync(viewsFolder)) {
+                fs.mkdirSync(viewsFolder);
+            }
+            const items = fs.readdirSync(viewsFolder, { withFileTypes: true });
+            const files = items.filter((item) => item.isFile());
+            const dirs = items.filter((item) => item.isDirectory());
+
+            files.forEach((file) => {
+                if (file.name.endsWith(".html")) {
+                    const content = fs.readFileSync(
+                        path.join(viewsFolder, file.name),
+                        "utf-8"
+                    );
+                    views.push(viewAdapter(file.name, content));
+                }
+            });
+
+            dirs.forEach((dir) => {
+                const dirPath = path.join(viewsFolder, dir.name);
+                const dirItems = fs.readdirSync(dirPath, {
+                    withFileTypes: true,
+                });
+                const files = dirItems.filter((item) => item.isFile());
+                files.forEach((file) => {
+                    if (file.name.endsWith(".html")) {
+                        const name = path.join(dirPath, file.name);
+                        const _name = `${dir.name}/${file.name}`;
+                        const content = fs.readFileSync(name, "utf-8");
+                        const view = viewAdapter(_name, content);
+                        views.push(view);
+                    }
+                });
+            });
+
+            views.forEach((view) => {
+                app.get(view.name, (req, res) => {
+                    if (view.useKey) {
+                        res.send(
+                            viewAdapt(view, memory, req.params.key ?? null)
+                        );
+                    } else {
+                        res.send(viewAdapt(view, memory));
+                    }
+                });
+            });
+        }
+        const routeTemplate = processRouteTemplate(
+            codeRouteTemplate,
+            routes,
+            views
+        );
         routes.forEach((route) => {
             app.get(route.name, (req, res) => {
-                res.send(processRoute(memory, preJs, route.content, route.name, routeTemplate, styles));
+                res.send(
+                    processRoute(
+                        memory,
+                        preJs,
+                        route.content,
+                        route.name,
+                        routeTemplate,
+                        styles
+                    )
+                );
             });
         });
-        app.all('*', (req, res) => {
-            res.status(404).send(
-                process404(
-                    code404,
-                    {routeTemplate}
-                )
-            );
+        app.all("*", (req, res) => {
+            res.status(404).send(process404(code404, { routeTemplate }));
         });
+        if (memory.getOrder("export") === "true") {
+            if (fs.existsSync("./out")) fs.rmSync("./out", { recursive: true });
+            fs.mkdirSync("./out");
+            fs.mkdirSync("./out/css");
+            fs.writeFileSync("./out/css/style.css", styles);
+
+            routes.forEach((route) => {
+                const routePath =
+                    route.name === "/"
+                        ? "./out/index.html"
+                        : `./out/${route.name.replace(/^\//, "")}/index.html`;
+                const dir = path.dirname(routePath);
+                fs.mkdirSync(dir, { recursive: true });
+                const cssPath =
+                    route.name === "/"
+                        ? "./css/style.css"
+                        : "../".repeat(route.name.split("/").length - 1) +
+                          "css/style.css";
+                const contentWithCSS = `<link href="${cssPath}" rel="stylesheet" />${route.content}`;
+
+                fs.writeFileSync(routePath, contentWithCSS);
+            });
+        }
         try {
             app.listen(config.port, () => {
-                console.log(`Server running at http://localhost:${config.port}/`);
+                console.log(
+                    `Server running at http://localhost:${config.port}/`
+                );
                 console.log(`Quit the server with (CTRL or CMD) + C`);
             });
         } catch (e) {
