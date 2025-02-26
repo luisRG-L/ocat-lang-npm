@@ -1,10 +1,11 @@
 import * as fs from "fs";
-import { processPath } from "../adapters/path";
 
-export const readFile = (_path: string, uglify: boolean = false): string | null => {
+export const readFile = (
+    _path: string,
+    uglify: boolean = false
+): string | null => {
     try {
-        const path = processPath(_path);
-        const data = fs.readFileSync(path, "utf8");
+        const data = fs.readFileSync(_path, "utf8");
         if (uglify) {
             return data.replace(/\s+/g, "");
         }
@@ -14,7 +15,10 @@ export const readFile = (_path: string, uglify: boolean = false): string | null 
     }
 };
 
-export const readFileWP = (path: string, uglify: boolean = false): string | null => {
+export const readFileWP = (
+    path: string,
+    uglify: boolean = false
+): string | null => {
     try {
         const data = fs.readFileSync(path, "utf8");
         if (uglify) {

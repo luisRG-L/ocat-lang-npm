@@ -1,6 +1,7 @@
 import { CustomError, ErrorType, Warning } from "../error";
 import { Variable, Component, Function, UtilMap, DCollection } from "./types/";
 import { _Object } from "./classes";
+import { Theme } from "./types/Theme";
 
 export class Memory {
     private variables: UtilMap<Variable> = new Map();
@@ -10,7 +11,9 @@ export class Memory {
     private orders: UtilMap<string> = new Map();
     private templates: UtilMap<string> = new Map();
     private collections: UtilMap<DCollection[]> = new Map();
+    private themes: UtilMap<Theme> = new Map();
     private properties: string[] = [];
+    private actuallyTheme: string = "";
 
     private strict: boolean = false;
 
@@ -134,9 +137,12 @@ export class Memory {
         }
     }
 
-    public getVar(name?: string) {
-        if (name) {
-            return this.variables.get(name);
+    public getVar<T>(name: string): Variable<T> | undefined {
+        const variable = this.variables.get(name);
+        if (typeof variable?.value === typeof ({} as T)) {
+            return variable as Variable<T>;
+        } else {
+            return undefined;
         }
     }
 
@@ -228,5 +234,33 @@ export class Memory {
 
     public get getCollections() {
         return this.collections;
+    }
+
+    // Themes
+    public declareTheme(name: string, properties: { [key: string]: string }) {
+        this.themes.set(name, {
+            name: name,
+            properties: properties,
+        });
+    }
+
+    public getTheme(name: string) {
+        return this.themes.get(name);
+    }
+
+    public get getThemes() {
+        return this.themes;
+    }
+
+    public getActuallyTheme() {
+        const theme = this.getThemes.get(this.actuallyTheme);
+        if (!theme) {
+            throw new Error("No theme defined");
+        }
+        return theme;
+    }
+
+    public setActuallyTheme(name: string) {
+        this.actuallyTheme = name;
     }
 }

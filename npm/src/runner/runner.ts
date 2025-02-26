@@ -31,59 +31,72 @@ import {
     defhead,
 } from "./constants";
 import { View, viewAdapt, viewAdapter } from "./adapters/view";
+import { processPath } from "./adapters/path";
 
 const memory: Memory = new Memory();
 
 const app = express();
 
+export const getThemes = () => {
+    if (fs.existsSync("./themes") && config.themes) {
+        fs.readdirSync("./themes").forEach((file) => {
+            const name = file.replace(".json", "");
+            const content = fs.readFileSync(`./themes/${file}`, "utf-8");
+            const properties = JSON.parse(content);
+            memory.declareTheme(name, properties);
+        });
+    }
+};
+
 export const save = () => {
+    getThemes();
     const properties = config.properties;
 
-    if (!properties) {
-        console.log("No properties provided");
-        return;
+    if (properties) {
+        properties.provided.forEach((key: string) => {
+            memory.addProperty(key);
+        });
+        if (properties.defined) {
+            Object.entries(properties.defined).forEach(([name, value]) => {
+                memory.addProperty(name);
+                memory.setOrder(name, value as string);
+            });
+        }
     }
 
-    properties.provided.forEach((key: string) => {
-        memory.addProperty(key);
-    });
-
-    Object.entries(properties.defined).forEach(([name, value]) => {
-        memory.addProperty(name);
-        memory.setOrder(name, value as string);
-    });
-
-    Object.entries(config.collections).forEach(([name, value]) => {
-        const folder = path.join("./collections", value as string);
-        if (fs.existsSync(folder)) {
-            const collectionItems: DCollection[] = [];
-            const items = fs.readdirSync(folder, { withFileTypes: true });
-            const files = items.filter((item) => item.isFile());
-            files.forEach((file) => {
-                const name = file.name;
-                const params: { [key: string]: string } = {};
-                const content = fs
-                    .readFileSync(path.join(folder, name), "utf8")
-                    .replace(
-                        /---\s+(.*?)\s+---/gs,
-                        (_match: string, paramContent: string) => {
-                            const paramMatch = /(.*?)="(.*?)"/gs;
-                            const matchs = paramContent.match(paramMatch);
-                            matchs?.forEach(([match, key, valuex]) => {
-                                params[key] = valuex;
-                            });
-                            return "";
-                        }
-                    );
-                collectionItems.push({
-                    content,
-                    params,
-                    title: name,
+    if (config.collections) {
+        Object.entries(config.collections).forEach(([name, value]) => {
+            const folder = path.join("./collections", value as string);
+            if (fs.existsSync(folder)) {
+                const collectionItems: DCollection[] = [];
+                const items = fs.readdirSync(folder, { withFileTypes: true });
+                const files = items.filter((item) => item.isFile());
+                files.forEach((file) => {
+                    const name = file.name;
+                    const params: { [key: string]: string } = {};
+                    const content = fs
+                        .readFileSync(path.join(folder, name), "utf8")
+                        .replace(
+                            /---\s+(.*?)\s+---/gs,
+                            (_match: string, paramContent: string) => {
+                                const paramMatch = /(.*?)="(.*?)"/gs;
+                                const matchs = paramContent.match(paramMatch);
+                                matchs?.forEach(([match, key, valuex]) => {
+                                    params[key] = valuex;
+                                });
+                                return "";
+                            }
+                        );
+                    collectionItems.push({
+                        content,
+                        params,
+                        title: name,
+                    });
                 });
-            });
-            memory.declareCollection(name, collectionItems);
-        }
-    });
+                memory.declareCollection(name, collectionItems);
+            }
+        });
+    }
 };
 
 export const run = (nodes: Node[]): Memory => {
@@ -110,8 +123,9 @@ export const run = (nodes: Node[]): Memory => {
             switch (node.type) {
                 case NodeType.OUTPUT:
                     if (node.params.content?.startsWith("\\")) {
-                        //const command = node.params.content.replace("\\", "");
-                        //print(commandite(command, node));
+                        const name = node.params.content.replace("\\", "");
+                        const value = memory.getVar<string>(name);
+                        print(value?.value ?? "");
                     } else {
                         print(node.params.content);
                     }
@@ -246,10 +260,7 @@ export const run = (nodes: Node[]): Memory => {
                     const dname = node.params.name;
                     const contentx = node.params.content;
                     if (dtype === "file") {
-                        fs.writeFileSync(
-                            dname ?? ".cats.ocat",
-                            contentx ?? "p"
-                        );
+                        fs.writeFileSync(dname ?? ".ocat", contentx ?? "p");
                     } else if (dtype === "folder" || dtype === "dir") {
                         fs.mkdirSync(dname ?? "./.ocat");
                     }
@@ -262,15 +273,15 @@ export const run = (nodes: Node[]): Memory => {
 
                 case NodeType.LOAD:
                     const _type = node.params.type ?? "";
-                    const _route = node.params.route ?? "";
-                    const pathName = _route.split("/").pop();
+                    const _route = processPath(node.params.route ?? "", config);
+                    const pathName = _route.split("/").pop() ?? "";
                     const readed =
                         readFile(_route + `/${pathName}.component.html`) ?? "";
                     const cssReaded =
                         readFile(_route + `/${pathName}.component.css`) ?? "";
-                    const name = (readed.match(/<title>\w+<\/title>/g) ?? [
-                        "udef",
-                    ])[0]
+                    const name = (
+                        readed.match(/<title>\w+<\/title>/g)?.[0] ?? "udef"
+                    )
                         .replace("<title>", "")
                         .replace("</title>", "");
                     if (_type === "component" || _type === "template") {
@@ -280,7 +291,11 @@ export const run = (nodes: Node[]): Memory => {
                             .join("\n");
                         const joinedContent =
                             prcontent +
-                            `<style>${processCSS(cssReaded, name)}</style>`;
+                            `<style>${processCSS(
+                                cssReaded,
+                                name,
+                                memory
+                            )}</style>`;
                         if (_type === "component") {
                             memory.declareComponent(name, joinedContent);
                         } else {

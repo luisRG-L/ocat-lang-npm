@@ -1,15 +1,13 @@
 import path from "path";
 import { readFileWP } from "../utils/readFile";
+import { OcatConfig } from "../types";
 
 interface PathRules {
     [key: string]: string;
 }
 
-const loadPathRules = (): PathRules | null => {
-    const configPath = path.join(__dirname, "../../../../../config/path.json");
-    const fallbackPath = './.ocat/ocat.json';
-    const rules = readFileWP(configPath) ?? readFileWP(fallbackPath);
-    return rules ? JSON.parse(rules) : null;
+const loadPathRules = (config: OcatConfig): PathRules | null => {
+    return config.path ?? null;
 };
 
 const replacePlaceholders = (value: string): string => {
@@ -29,7 +27,7 @@ const applyPathRules = (wppath: string, rules: PathRules): string => {
     return ppath;
 };
 
-export const processPath = (wppath: string): string => {
-    const rules = loadPathRules();
+export const processPath = (wppath: string, config: OcatConfig): string => {
+    const rules = loadPathRules(config);
     return rules ? applyPathRules(wppath, rules) : wppath;
 };
